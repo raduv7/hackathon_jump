@@ -1,0 +1,35 @@
+# Angular build output
+/dist
+/tmp
+/out-tsc
+
+# Angular cache
+/.angular/cache
+
+# Node modules
+/node_modules
+
+# IDE - WebStorm / IntelliJ
+.idea/
+/*.iml
+
+# Environment files (if you don't want secrets in git)
+src/environments/environment*.ts
+
+# Logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# Coverage reports
+/coverage
+
+# Misc
+.DS_Store
+Thumbs.db
+
+# Optional: lockfiles (depends on team policy)
+ package-lock.json
+ yarn.lock
+ pnpm-lock.yaml
