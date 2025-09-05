@@ -38,3 +38,4 @@ out/
 
 # Sensitive configuration files
 src/main/resources/secrets.properties
+src/main/resources/database

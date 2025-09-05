@@ -11,5 +11,5 @@ import { API_BASE_URL } from '../security.config';
   styleUrls: ['./login.component.scss']
 })
 export class LoginComponent {
-  googleAuthUrl = `${API_BASE_URL}/oauth2/authorization/google`;
+  googleAuthUrl = `${API_BASE_URL}/auth/oauth2/google`;
 }
