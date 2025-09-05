@@ -76,3 +76,6 @@ Thumbs.db
  package-lock.json
  yarn.lock
  pnpm-lock.yaml
+
+# custom
+src/app/security.config.ts
