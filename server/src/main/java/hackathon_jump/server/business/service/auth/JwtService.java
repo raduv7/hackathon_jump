@@ -1,5 +1,7 @@
 package hackathon_jump.server.business.service.auth;
 
+import hackathon_jump.server.model.dto.Session;
+import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.security.Keys;
 
@@ -8,7 +10,10 @@ import java.nio.charset.StandardCharsets;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.Date;
+import java.util.List;
 import java.util.Map;
+import java.util.stream.Stream;
+import java.util.stream.StreamSupport;
 
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
@@ -49,6 +54,35 @@ public class JwtService {
         .parseSignedClaims(jwt)
         .getPayload()
         .getSubject();
+  }
+
+  public Claims validateAndGetClaims(String jwt) {
+    return Jwts.parser()
+        .verifyWith(key)
+        .requireIssuer(issuer)
+        .build()
+        .parseSignedClaims(jwt)
+        .getPayload();
+  }
+
+  public Session validateAndGetSession(String jwt) {
+    Claims claims = validateAndGetClaims(jwt);
+    List<String> googleEmailAddresses = (List<String>) claims.get("googleEmailAddresses");
+    String facebookUsername = (String) claims.get("facebookUsername");
+    String linkedinUsername = (String) claims.get("linkedinUsername");
+
+    return new Session(googleEmailAddresses, facebookUsername, linkedinUsername);
+  }
+
+  public Session mergeSessions(Session session, Session other) {
+    List<String> googleEmailAddresses = Stream.concat(
+            session.getGoogleEmailAddresses().stream(),
+            other.getGoogleEmailAddresses().stream())
+            .distinct().toList();
+    String facebookUsername = other.getFacebookUsername() == null ? session.getFacebookUsername() : other.getFacebookUsername();
+    String linkedinUsername = other.getLinkedinUsername() == null ? session.getLinkedinUsername() : other.getLinkedinUsername();
+
+    return new Session(googleEmailAddresses, facebookUsername, linkedinUsername);
   }
 
   public boolean isTokenValid(String jwt, org.springframework.security.core.userdetails.UserDetails userDetails) {
