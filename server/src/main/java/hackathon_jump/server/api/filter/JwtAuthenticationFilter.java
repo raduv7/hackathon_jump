@@ -1,18 +1,13 @@
 package hackathon_jump.server.api.filter;
 
 import hackathon_jump.server.business.service.auth.JwtService;
+import hackathon_jump.server.model.dto.Session;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
-import org.springframework.core.annotation.Order;
 import org.springframework.lang.NonNull;
-import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.core.userdetails.UserDetails;
-import org.springframework.security.core.userdetails.UserDetailsService;
-import org.springframework.security.web.authentication.WebAuthenticationDetailsSource;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
@@ -26,7 +21,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     private static final Logger log = LoggerFactory.getLogger(JwtAuthenticationFilter.class);
     
     private final JwtService jwtService;
-    private final UserDetailsService userDetailsService;
+//    private final UserDetailsService userDetailsService;
 
     @Override
     protected void doFilterInternal(
@@ -39,7 +34,6 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         
         final String authHeader = request.getHeader("Authorization");
         final String jwt;
-        final String userEmail;
         
         if (authHeader == null || !authHeader.startsWith("Bearer ")) {
             filterChain.doFilter(request, response);
@@ -48,23 +42,25 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         
         jwt = authHeader.substring(7);
         try {
-            userEmail = jwtService.validateAndGetSubject(jwt);
-            
-            if (userEmail != null && SecurityContextHolder.getContext().getAuthentication() == null) {
-                UserDetails userDetails = this.userDetailsService.loadUserByUsername(userEmail);
-                
-                if (jwtService.isTokenValid(jwt, userDetails)) {
-                    UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(
-                            userDetails,
-                            null,
-                            userDetails.getAuthorities()
-                    );
-                    authToken.setDetails(
-                            new WebAuthenticationDetailsSource().buildDetails(request)
-                    );
-                    SecurityContextHolder.getContext().setAuthentication(authToken);
-                }
-            }
+            Session session = jwtService.validateAndGetSession(jwt);
+            request.setAttribute("session", session);
+
+//            String userEmail = jwtService.validateAndGetSubject(jwt);
+//            if (userEmail != null && SecurityContextHolder.getContext().getAuthentication() == null) {
+//                UserDetails userDetails = this.userDetailsService.loadUserByUsername(userEmail);
+//                if (!jwtService.isTokenValid(jwt, userDetails)) {
+//                    throw new JwtException(jwt);
+//                }
+//                UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(
+//                        userDetails,
+//                        null,
+//                        userDetails.getAuthorities()
+//                );
+//                authToken.setDetails(
+//                        new WebAuthenticationDetailsSource().buildDetails(request)
+//                );
+//                SecurityContextHolder.getContext().setAuthentication(authToken);
+//            }
         } catch (Exception e) {
             // Token is invalid, continue without authentication
             logger.debug("Invalid JWT token: " + e.getMessage());

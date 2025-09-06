@@ -10,6 +10,7 @@ import java.nio.charset.StandardCharsets;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Stream;
@@ -34,10 +35,25 @@ public class JwtService {
     this.expiresMinutes = expiresMinutes;
   }
 
+  public String issue(Session session) {
+    Map<String, Object> claims = Map.of(
+      "googleEmailAddresses", session.getGoogleEmailAddresses(),
+      "facebookUsername", session.getFacebookUsername(),
+      "linkedinUsername", session.getLinkedinUsername()
+    );
+    Instant now = Instant.now();
+    return Jwts.builder()
+            .issuer(issuer)
+            .issuedAt(Date.from(now))
+            .expiration(Date.from(now.plus(expiresMinutes, ChronoUnit.MINUTES)))
+            .claims(claims)
+            .signWith(key)
+            .compact();
+  }
+
   public String issue(String subject, Map<String, Object> claims) {
     Instant now = Instant.now();
     return Jwts.builder()
-        .subject(subject)
         .issuer(issuer)
         .issuedAt(Date.from(now))
         .expiration(Date.from(now.plus(expiresMinutes, ChronoUnit.MINUTES)))

@@ -1,15 +1,18 @@
 package hackathon_jump.server.api.controller;
 
 import hackathon_jump.server.business.service.auth.JwtService;
+import hackathon_jump.server.business.service.auth.UserService;
+import hackathon_jump.server.infrastructure.repository.IUserRepository;
 import hackathon_jump.server.model.EOauthProvider;
+import hackathon_jump.server.model.dto.Session;
+import org.checkerframework.checker.units.qual.A;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.oauth2.client.OAuth2AuthorizedClient;
 import org.springframework.security.oauth2.client.annotation.RegisteredOAuth2AuthorizedClient;
 import org.springframework.security.oauth2.core.user.OAuth2User;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
@@ -28,42 +31,51 @@ public class AuthController {
     private static Logger log = LoggerFactory.getLogger(AuthController.class);
 
     @Autowired
+    private UserService userService;
+
+    @Autowired
     private JwtService jwtService;
 
     @GetMapping("/oauth2/google/callback")
     public void handleCallback(
         @AuthenticationPrincipal OAuth2User oauth2User,
-        @RegisteredOAuth2AuthorizedClient("google") OAuth2AuthorizedClient client,
+        @RegisteredOAuth2AuthorizedClient("google") OAuth2AuthorizedClient oAuth2AuthorizedClient,
         HttpServletRequest request,
         HttpServletResponse response
     ) throws IOException {
         log.debug("OAuth callback for {}", Optional.ofNullable(oauth2User.getAttribute("name")));
-        
-        // Extract user info from Google
+
         String email = oauth2User.getAttribute("email");
         String name = oauth2User.getAttribute("name");
-        
-        // Get access token for Google Calendar API calls (stored for future use)
-        // todo check this shit
-         String accessToken = oauth2User.getAttribute("access_token");
-        
-        // Validate required fields
+
         if (email == null || email.isEmpty()) {
             response.sendRedirect("http://localhost:4200/auth/oauth2/callback?error=invalid_user");
             return;
         }
-        
-        // Generate JWT token with access token included
+        // Get the access token from the OAuth2AuthorizedClient
+        String accessToken = oAuth2AuthorizedClient.getAccessToken().getTokenValue();
+        String refreshToken = oAuth2AuthorizedClient.getRefreshToken() == null ? "" :
+                oAuth2AuthorizedClient.getRefreshToken().getTokenValue();
+        userService.save(email, accessToken, EOauthProvider.GOOGLE);
+
         Map<String, Object> claims = Map.of(
             "googleEmailAddresses", List.of(email)
         );
         String jwt = jwtService.issue(email, claims);
-        
-        // Redirect to frontend with JWT token and user info
+
         String redirectUrl = String.format(
             "http://localhost:4200/auth/oauth2/callback?token=%s&email=%s&name=%s&provider=%s",
             jwt, email, name, EOauthProvider.GOOGLE
         );
         response.sendRedirect(redirectUrl);
+    }
+
+    @PostMapping("/tokens")
+    public ResponseEntity<String> handleMergeTokens(@RequestAttribute("session") Session session,
+                                            @RequestBody String token2) {
+        Session session2 = jwtService.validateAndGetSession(token2);
+        Session newSession = jwtService.mergeSessions(session, session2);
+        String jwt = jwtService.issue(newSession);
+        return ResponseEntity.ok(jwt);
     }
 }

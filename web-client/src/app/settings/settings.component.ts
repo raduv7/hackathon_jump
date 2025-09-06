@@ -17,7 +17,7 @@ export class SettingsComponent implements OnInit {
   userName: string = '';
   userPicture: string = '';
   userProvider: string = '';
-  
+
 
   // Account management properties
   googleAccounts: any[] = [];
@@ -186,7 +186,7 @@ export class SettingsComponent implements OnInit {
       minutes_before_meeting: this.minutesBeforeMeeting
     };
 
-    this.http.post(`${API_BASE_URL}/settings/minutes_before_meeting`, requestBody, { headers })
+    this.http.post(`${API_BASE_URL}/settings/minutes_before_meeting/` + this.minutesBeforeMeeting, requestBody, { headers })
       .subscribe({
         next: (response) => {
           console.log('Meeting settings saved successfully:', response);
