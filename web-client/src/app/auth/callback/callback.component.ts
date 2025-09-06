@@ -113,6 +113,7 @@ export class CallbackComponent implements OnInit {
       localStorage.setItem('token', params['token']);
     } else {
       // Merge tokens asynchronously
+      console.log("merge tokens");
       this.mergeTokens(existingToken, params['token']);
     }
   }

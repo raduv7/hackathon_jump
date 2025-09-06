@@ -10,6 +10,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.oauth2.client.OAuth2AuthorizedClient;
 import org.springframework.security.oauth2.client.annotation.RegisteredOAuth2AuthorizedClient;
+import org.springframework.security.oauth2.core.oidc.user.DefaultOidcUser;
 import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.web.bind.annotation.*;
 
@@ -55,6 +56,8 @@ public class AuthController {
             return;
         }
         // Get the access token from the OAuth2AuthorizedClient
+//        String accessToken = oAuth2AuthorizedClient.getAccessToken().getTokenValue();
+        String idToken = ((DefaultOidcUser) oauth2User).getIdToken().getTokenValue();
         String accessToken = oAuth2AuthorizedClient.getAccessToken().getTokenValue();
         // todo add support for refresh tokens
         String refreshToken = oAuth2AuthorizedClient.getRefreshToken() == null ? "" :
@@ -169,7 +172,7 @@ public class AuthController {
         response.sendRedirect(redirectUrl);
     }
 
-    @PostMapping("/auth/tokens")
+    @PostMapping("/tokens")
     public ResponseEntity<String> handleMergeTokens(@RequestAttribute("session") Session session,
                                             @RequestBody String token2) {
         Session session2 = jwtService.validateAndGetSession(token2);

@@ -21,7 +21,7 @@ public class EventController {
     @Autowired
     private EventService eventService;
 
-    @GetMapping("/")
+    @GetMapping({"", "/"})
     public ResponseEntity<List<Event>> getEvents(@RequestAttribute("session") Session session) {
         try {
             List<Event> events = eventService.getAll(session);

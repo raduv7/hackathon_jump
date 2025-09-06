@@ -1,6 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { HttpClient } from '@angular/common/http';
 
 @Component({
   selector: 'app-future-events',
@@ -24,10 +25,22 @@ export class FutureEventsComponent implements OnInit {
   // Future events (placeholder for now)
   futureEvents: any[] = [];
 
-  constructor() { }
+  constructor(private http: HttpClient) { }
 
   ngOnInit() {
     this.generateCalendar();
+    this.loadEvents();
+  }
+
+  loadEvents() {
+    this.http.get('/events').subscribe({
+      next: (response) => {
+        console.log('Events response:', response);
+      },
+      error: (error) => {
+        console.error('Error loading events:', error);
+      }
+    });
   }
 
   generateCalendar() {
