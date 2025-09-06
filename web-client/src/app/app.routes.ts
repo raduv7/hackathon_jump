@@ -3,6 +3,7 @@ import { LoginComponent } from './login/login.component';
 import { CallbackComponent } from './auth/callback/callback.component';
 import { DashboardComponent } from './dashboard/dashboard.component';
 import { SettingsComponent } from './settings/settings.component';
+import { FutureEventsComponent } from './future-events/future-events.component';
 import { AuthGuard } from './auth/auth.guard';
 
 export const routes: Routes = [
@@ -10,6 +11,7 @@ export const routes: Routes = [
   { path: 'login', component: LoginComponent },
   { path: 'auth/oauth2/callback', component: CallbackComponent },
   { path: 'dashboard', component: DashboardComponent, canActivate: [AuthGuard] },
+  { path: 'future-events', component: FutureEventsComponent, canActivate: [AuthGuard] },
   { path: 'settings', component: SettingsComponent, canActivate: [AuthGuard] },
   { path: '**', redirectTo: 'login' }
 ];

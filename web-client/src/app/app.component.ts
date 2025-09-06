@@ -111,6 +111,17 @@ export class AppComponent implements OnInit {
     localStorage.removeItem('user_picture');
     localStorage.removeItem('user_provider');
     
+    // Clear social account data
+    localStorage.removeItem('facebookUsername');
+    localStorage.removeItem('facebookName');
+    localStorage.removeItem('linkedinUsername');
+    localStorage.removeItem('linkedinName');
+    localStorage.removeItem('linkedin_account');
+    
+    // Clear Google account data
+    localStorage.removeItem('googleEmailList');
+    localStorage.removeItem('googleNameList');
+    
     // Close dialog
     this.showLogoutDialog = false;
     this.isLoggingOut = false;
