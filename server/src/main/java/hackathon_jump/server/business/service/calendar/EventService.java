@@ -9,10 +9,12 @@ import hackathon_jump.server.model.domain.Event;
 import hackathon_jump.server.model.domain.User;
 import hackathon_jump.server.model.dto.Session;
 import lombok.extern.slf4j.Slf4j;
+import org.checkerframework.checker.units.qual.A;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.io.IOException;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
@@ -26,6 +28,8 @@ public class EventService {
     @Autowired
     private IUserRepository userRepository;
     @Autowired
+    private EventReportService eventReportService;
+    @Autowired
     private GoogleCalendarService googleCalendarService;
     @Autowired
     private EventMapper eventMapper;
@@ -33,6 +37,17 @@ public class EventService {
     public List<Event> getAll(Session session) throws IOException {
         List<Event> events = getAllFromGoogle(session);
         return saveAll(events);
+    }
+
+    public List<Event> getAllOngoing(Session session) {
+        List<Event> events = new ArrayList<>();
+
+        for(String googleEmailAddress : session.getGoogleEmailAddresses()) {
+            User user = userRepository.findByUsernameAndProvider(googleEmailAddress, EOauthProvider.GOOGLE).orElseThrow();
+            events.addAll(this.eventRepository.findAllByOwnerAndFinishedIsFalseAndStartDateTimeAfter(user, LocalDateTime.now()));
+        }
+
+        return events;
     }
 
     public void refreshAll(Session session) throws IOException {
@@ -64,9 +79,14 @@ public class EventService {
             Optional<Event> optionalOldEvent = eventRepository.findOneByGoogleId(event.getGoogleId());
             if(optionalOldEvent.isPresent()) {
                 Event oldEvent = optionalOldEvent.get();
-                eventMapper.updateEvent(oldEvent, event);
+                if(eventMapper.updateEvent(oldEvent, event) && oldEvent.shouldUpdateBot()) {
+                    this.eventReportService.updateBot(oldEvent);
+                }
                 savedEvents.add(eventRepository.save(oldEvent));
             } else {
+                if(event.shouldUpdateBot()) {
+                    this.eventReportService.createBot(event);
+                }
                 savedEvents.add(eventRepository.save(event));
             }
         }
@@ -81,6 +101,11 @@ public class EventService {
             throw new IllegalArgumentException("no rights on this eventId");
         }
         event.setShouldSendBot(shouldSendBot);
+        if(event.shouldUpdateBot()) {
+            this.eventReportService.createBot(event);
+        } else {
+            this.eventReportService.deleteBot(event);
+        }
         eventRepository.save(event);
     }
 }

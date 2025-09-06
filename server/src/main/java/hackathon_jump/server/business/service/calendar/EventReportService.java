@@ -2,30 +2,42 @@ package hackathon_jump.server.business.service.calendar;
 
 import hackathon_jump.server.business.service.external.RecallAiService;
 import hackathon_jump.server.infrastructure.repository.IEventReportRepository;
+import hackathon_jump.server.infrastructure.repository.IUserRepository;
 import hackathon_jump.server.model.domain.Event;
 import hackathon_jump.server.model.domain.EventReport;
-import hackathon_jump.server.model.enums.EMeetingPlatform;
+import hackathon_jump.server.model.domain.User;
+import hackathon_jump.server.model.dto.Session;
+import hackathon_jump.server.model.enums.EOauthProvider;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import java.time.Instant;
 import java.time.ZoneOffset;
 import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
+import java.util.List;
 
 @Service
 @Slf4j
 public class EventReportService {
     @Autowired
+    private IUserRepository userRepository;
+    @Autowired
     private IEventReportRepository eventReportRepository;
     @Autowired
     private RecallAiService recallAiService;
 
-    /**
-     * Creates a bot for the given event and stores the bot ID in an EventReport
-     * @param event The event to create a bot for
-     * @return The created EventReport with bot ID
-     */
+    public List<EventReport> getAll(Session session) {
+        List<EventReport> eventReports = new ArrayList<>();
+
+        for(String googleEmailAddress : session.getGoogleEmailAddresses()) {
+            User user = this.userRepository.findByUsernameAndProvider(googleEmailAddress, EOauthProvider.GOOGLE).orElseThrow();
+            eventReports.addAll(this.eventReportRepository.findAllByEventOwnerAndPlatformIsNotNull(user));
+        }
+
+        return eventReports;
+    }
+
     public EventReport createBot(Event event) {
         log.debug("Creating bot for event: {} (ID: {})", event.getTitle(), event.getId());
         
@@ -40,6 +52,7 @@ public class EventReportService {
             EventReport eventReport = new EventReport();
             eventReport.setBotId(botId);
             EventReport savedEventReport = eventReportRepository.save(eventReport);
+            event.setEventReport(eventReport);
             log.debug("Saved EventReport with ID: {} for bot: {}", savedEventReport.getId(), botId);
 
             return savedEventReport;

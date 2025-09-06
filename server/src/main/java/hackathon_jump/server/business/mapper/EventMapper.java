@@ -32,7 +32,7 @@ public interface EventMapper {
     @Mapping(source = "creator.email", target = "creator")
     @Mapping(target = "owner", ignore = true)
     @Mapping(target = "shouldSendBot", constant = "false")
-    @Mapping(target = "sentBot", constant = "false")
+    @Mapping(target = "isFinished", constant = "false")
     Event googleEventToEvent(com.google.api.services.calendar.model.Event googleEvent);
 
     List<Event> googleEventsToEvents(List<com.google.api.services.calendar.model.Event> googleEvents);
@@ -47,7 +47,14 @@ public interface EventMapper {
                 .collect(Collectors.toList());
     }
 
-    default void updateEvent(Event event, Event other) {
+    /**
+     *
+     * @param event
+     * @param other
+     * @return whether or not to update the bot
+     */
+    default boolean updateEvent(Event event, Event other) {
+        boolean result = false;
         if(other.getAttendees() != null) {
             event.setAttendees(other.getAttendees());
         }
@@ -59,16 +66,19 @@ public interface EventMapper {
         }
         if(other.getLink() != null) {
             event.setLink(other.getLink());
+            result = true;
         }
         if(other.getLocation() != null) {
             event.setLocation(other.getLocation());
         }
         if(other.getStartDateTime() != null) {
             event.setStartDateTime(other.getStartDateTime());
+            result = true;
         }
         if(other.getTitle() != null) {
             event.setTitle(other.getTitle());
         }
+        return result;
     }
 
     @Named("extractMeetingLink")

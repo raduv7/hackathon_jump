@@ -28,4 +28,7 @@ public class EventReport {
     private String emailText;
     private String linkedinPost;
     private String facebookPost;
+    
+    @OneToOne(fetch = FetchType.EAGER, mappedBy = "eventReport")
+    private Event event;
 }

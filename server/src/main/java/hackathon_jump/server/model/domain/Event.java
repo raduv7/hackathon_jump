@@ -37,5 +37,13 @@ public class Event {
     private String location;
     private String link;
     private boolean shouldSendBot;
-    private boolean sentBot;
+    private boolean isFinished;
+
+    public boolean canChangeBot() {
+        return startDateTime.minusMinutes(owner.getMinutesBeforeMeeting()).isAfter(LocalDateTime.now());
+    }
+
+    public boolean shouldUpdateBot() {
+        return link != null && shouldSendBot && canChangeBot();
+    }
 }

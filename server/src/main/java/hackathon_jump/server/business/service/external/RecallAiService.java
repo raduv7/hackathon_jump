@@ -1,5 +1,6 @@
 package hackathon_jump.server.business.service.external;
 
+import hackathon_jump.server.model.domain.EventReport;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.*;
@@ -87,6 +88,10 @@ public class RecallAiService {
             log.error("Error creating scheduled bot: {}", e.getMessage());
             throw new RuntimeException("Failed to create scheduled bot", e);
         }
+    }
+
+    public void fillEventReport(EventReport eventReport) {
+        // fill attendees, startDateTime, transcript from bot
     }
     
     /**

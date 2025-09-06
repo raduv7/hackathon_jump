@@ -1,6 +1,9 @@
 package hackathon_jump.server.business.service.auth;
 
+import hackathon_jump.server.business.service.calendar.EventReportService;
+import hackathon_jump.server.infrastructure.repository.IEventRepository;
 import hackathon_jump.server.infrastructure.repository.IUserRepository;
+import hackathon_jump.server.model.domain.Event;
 import hackathon_jump.server.model.enums.EOauthProvider;
 import hackathon_jump.server.model.domain.User;
 import hackathon_jump.server.model.dto.Session;
@@ -17,6 +20,10 @@ public class UserService {
 
     @Autowired
     private IUserRepository userRepository;
+    @Autowired
+    private IEventRepository eventRepository;
+    @Autowired
+    private EventReportService eventReportService;
 
     public void save(String username, String oauthToken, EOauthProvider provider) {
         Optional<User> optionalUser = userRepository.findByUsernameAndProvider(username, provider);
@@ -36,6 +43,12 @@ public class UserService {
             User user = userRepository.findByUsernameAndProvider(googleEmail, EOauthProvider.GOOGLE).orElseThrow();
             user.setMinutesBeforeMeeting(minutesBeforeMeeting);
             userRepository.save(user);
+
+            for(Event event : this.eventRepository.findAllByOwner(user)) {
+                if(event.shouldUpdateBot()) {
+                    this.eventReportService.updateBot(event);
+                }
+            }
         }
     }
 }
