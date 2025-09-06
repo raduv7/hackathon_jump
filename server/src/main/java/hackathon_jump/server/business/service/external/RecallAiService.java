@@ -9,6 +9,8 @@ import org.springframework.web.client.RestTemplate;
 import org.springframework.web.util.UriComponentsBuilder;
 
 import java.net.URI;
+import java.time.Instant;
+import java.time.ZoneOffset;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -91,7 +93,68 @@ public class RecallAiService {
     }
 
     public void fillEventReport(EventReport eventReport) {
-        // fill attendees, startDateTime, transcript from bot
+        if (eventReport == null || eventReport.getBotId() == null) {
+            log.warn("Cannot fill EventReport: botId is null");
+            return;
+        }
+        
+        String botId = eventReport.getBotId();
+        log.info("Filling EventReport for bot: {}", botId);
+        
+        try {
+            // Get bot details
+            Map<String, Object> botDetails = retrieveBot(botId);
+            if (botDetails == null) {
+                log.warn("Bot details not found for botId: {}", botId);
+                return;
+            }
+            
+            // Fill startDateTime from bot
+            if (botDetails.containsKey("join_at")) {
+                String joinAt = (String) botDetails.get("join_at");
+                if (joinAt != null && !joinAt.isEmpty()) {
+                    try {
+                        Instant instant = Instant.parse(joinAt);
+                        eventReport.setStartDateTime(instant.atOffset(ZoneOffset.UTC).toLocalDateTime());
+                        log.debug("Set startDateTime from bot: {}", eventReport.getStartDateTime());
+                    } catch (Exception e) {
+                        log.warn("Failed to parse join_at time: {}", joinAt);
+                    }
+                }
+            }
+            
+            // Fill attendees from bot (if available in bot details)
+            if (botDetails.containsKey("attendees")) {
+                Object attendeesObj = botDetails.get("attendees");
+                if (attendeesObj instanceof java.util.List) {
+                    @SuppressWarnings("unchecked")
+                    java.util.List<String> attendees = (java.util.List<String>) attendeesObj;
+                    eventReport.setAttendees(String.join(", ", attendees));
+                    log.debug("Set attendees from bot: {}", eventReport.getAttendees());
+                }
+            }
+            
+            // Fill transcript if available
+            if (isTranscriptAvailable(botId)) {
+                try {
+                    String transcript = getTranscript(botId);
+                    if (transcript != null && !transcript.isEmpty()) {
+                        eventReport.setTranscript(transcript);
+                        log.debug("Set transcript from bot, length: {} characters", transcript.length());
+                    }
+                } catch (Exception e) {
+                    log.warn("Failed to get transcript for bot {}: {}", botId, e.getMessage());
+                }
+            } else {
+                log.debug("Transcript not yet available for bot: {}", botId);
+            }
+            
+            log.info("Successfully filled EventReport for bot: {}", botId);
+            
+        } catch (Exception e) {
+            log.error("Failed to fill EventReport for bot {}: {}", botId, e.getMessage());
+            throw new RuntimeException("Failed to fill EventReport", e);
+        }
     }
     
     /**
