@@ -71,13 +71,26 @@ export class SettingsComponent implements OnInit {
       }
     }
 
-    // Load LinkedIn account from localStorage
-    const linkedinAccountData = localStorage.getItem('linkedin_account');
-    if (linkedinAccountData) {
-      try {
-        this.linkedinAccount = JSON.parse(linkedinAccountData);
-      } catch (error) {
-        console.error('Error parsing LinkedIn account data:', error);
+    // Load LinkedIn account from localStorage - check for linkedinUsername and linkedinName
+    const linkedinUsername = localStorage.getItem('linkedinUsername');
+    const linkedinName = localStorage.getItem('linkedinName');
+
+    if (linkedinUsername && linkedinName) {
+      this.linkedinAccount = {
+        id: 'linkedin_' + Date.now(),
+        username: linkedinUsername,
+      };
+    } else {
+      // Fallback to old linkedin_account format if it exists
+      const linkedinAccountData = localStorage.getItem('linkedin_account');
+      if (linkedinAccountData) {
+        try {
+          this.linkedinAccount = JSON.parse(linkedinAccountData);
+        } catch (error) {
+          console.error('Error parsing LinkedIn account data:', error);
+          this.linkedinAccount = null;
+        }
+      } else {
         this.linkedinAccount = null;
       }
     }
@@ -93,16 +106,16 @@ export class SettingsComponent implements OnInit {
   private loadGoogleAccountsFromLists() {
     const googleEmailList = localStorage.getItem('googleEmailList');
     const googleNameList = localStorage.getItem('googleNameList');
-    
+
     this.googleAccounts = [];
-    
+
     if (googleEmailList && googleNameList) {
       const emails = googleEmailList.split(',').filter(email => email.trim() !== '');
       const names = googleNameList.split(',').filter(name => name.trim() !== '');
-      
+
       // Ensure both lists have the same length
       const minLength = Math.min(emails.length, names.length);
-      
+
       for (let i = 0; i < minLength; i++) {
         this.googleAccounts.push({
           id: `google_${i}`,

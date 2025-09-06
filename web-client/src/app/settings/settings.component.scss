@@ -114,6 +114,9 @@
   display: flex;
   flex-direction: column;
   gap: 2rem;
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
 }
 
 .right-side {
@@ -125,6 +128,17 @@
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 1rem;
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
+  
+  .facebook-account-card,
+  .linkedin-account-card {
+    min-width: 0; // Prevents grid items from overflowing
+    width: 100%;
+    max-width: 100%;
+    box-sizing: border-box;
+  }
 }
 
 .accounts-card {
@@ -136,6 +150,9 @@
   border: 1px solid rgba(255, 255, 255, 0.2);
   transition: transform 0.3s ease, box-shadow 0.3s ease;
   min-height: 15vh;
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
 
   &:hover {
     transform: translateY(-4px);
@@ -345,6 +362,44 @@
     border: 1px solid #ddd;
   }
 
+  .linkedin-logo-avatar {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    background: white;
+    border: 1px solid #ddd;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  }
+
+  .account-avatar-large {
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    border: 1px solid #ddd;
+  }
+
+  .linkedin-logo-avatar-large {
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    background: white;
+    border: 1px solid #ddd;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  }
+
+  .account-details-vertical {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.25rem;
+  }
+
   .google-logo-avatar {
     width: 32px;
     height: 32px;
@@ -371,6 +426,12 @@
   .account-email {
     font-size: 0.8rem;
     color: #666;
+  }
+
+  .account-username {
+    font-size: 0.8rem;
+    color: #0077B5;
+    font-weight: 500;
   }
 
   .remove-account-btn {
@@ -449,6 +510,19 @@
     border: 1px solid #e0e0e0;
     border-radius: 8px;
     background: #f9f9f9;
+  }
+
+  .connected-account-vertical {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    padding: 1rem;
+    border: 1px solid #e0e0e0;
+    border-radius: 8px;
+    background: #f9f9f9;
+    gap: 0.75rem;
   }
 
   .social-icon {

@@ -13,10 +13,16 @@ import org.springframework.security.config.annotation.web.configurers.AbstractHt
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.security.oauth2.client.registration.ClientRegistrationRepository;
 import org.springframework.security.oauth2.client.userinfo.DefaultOAuth2UserService;
 import org.springframework.security.oauth2.client.userinfo.OAuth2UserRequest;
 import org.springframework.security.oauth2.client.userinfo.OAuth2UserService;
+import org.springframework.security.oauth2.client.web.DefaultOAuth2AuthorizationRequestResolver;
+import org.springframework.security.oauth2.core.oidc.endpoint.OidcParameterNames;
 import org.springframework.security.oauth2.core.user.OAuth2User;
+import org.springframework.security.oauth2.client.endpoint.OAuth2AccessTokenResponseClient;
+import org.springframework.security.oauth2.client.endpoint.OAuth2AuthorizationCodeGrantRequest;
+import org.springframework.security.oauth2.client.oidc.userinfo.OidcUserService;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.web.cors.CorsConfiguration;
@@ -40,6 +46,8 @@ public class SecurityConfig {
     private String corsAllowedOrigins;
 
     @Autowired
+    private final ClientRegistrationRepository clientRegistrationRepository;
+    @Autowired
     private final JwtAuthenticationFilter jwtAuthFilter;
     @Autowired
     private final RequestLoggingFilter requestLoggingFilter;
@@ -61,8 +69,14 @@ public class SecurityConfig {
                 .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class)
                 .addFilterBefore(requestLoggingFilter, JwtAuthenticationFilter.class)
                 .oauth2Login(oauth2 -> oauth2
+                        .authorizationEndpoint((authorizationEndpointConfig ->
+                                authorizationEndpointConfig.authorizationRequestResolver(
+                                        requestResolver(this.clientRegistrationRepository)
+                                ))
+                        )
                         .userInfoEndpoint(userInfo -> userInfo
                                 .userService(oauth2UserService())
+                                .oidcUserService(oidcUserService())
                         )
                         .successHandler((request, response, authentication) -> {
                             String requestUri = request.getRequestURI();
@@ -92,9 +106,33 @@ public class SecurityConfig {
         return source;
     }
 
+    private static DefaultOAuth2AuthorizationRequestResolver requestResolver
+            (ClientRegistrationRepository clientRegistrationRepository) {
+        DefaultOAuth2AuthorizationRequestResolver requestResolver =
+                new DefaultOAuth2AuthorizationRequestResolver(clientRegistrationRepository,
+                        "/oauth2/authorization");
+        requestResolver.setAuthorizationRequestCustomizer(c ->
+                c.attributes(stringObjectMap -> stringObjectMap.remove(OidcParameterNames.NONCE))
+                        .parameters(params -> params.remove(OidcParameterNames.NONCE))
+        );
+
+        return requestResolver;
+    }
+
     @Bean
     public OAuth2UserService<OAuth2UserRequest, OAuth2User> oauth2UserService() {
         return new DefaultOAuth2UserService();
+    }
+    
+    @Bean
+    public OidcUserService oidcUserService() {
+        return new OidcUserService();
+    }
+    
+    @Bean
+    public OAuth2AccessTokenResponseClient<OAuth2AuthorizationCodeGrantRequest> accessTokenResponseClient() {
+        //noinspection removal
+        return new org.springframework.security.oauth2.client.endpoint.DefaultAuthorizationCodeTokenResponseClient();
     }
 
     @Bean

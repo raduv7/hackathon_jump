@@ -2,10 +2,8 @@ package hackathon_jump.server.api.controller;
 
 import hackathon_jump.server.business.service.auth.JwtService;
 import hackathon_jump.server.business.service.auth.UserService;
-import hackathon_jump.server.infrastructure.repository.IUserRepository;
 import hackathon_jump.server.model.EOauthProvider;
 import hackathon_jump.server.model.dto.Session;
-import org.checkerframework.checker.units.qual.A;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -28,7 +26,7 @@ import org.slf4j.LoggerFactory;
 @RestController
 @RequestMapping("/auth")
 public class AuthController {
-    private static Logger log = LoggerFactory.getLogger(AuthController.class);
+    private static final Logger log = LoggerFactory.getLogger(AuthController.class);
 
     @Autowired
     private UserService userService;
@@ -71,7 +69,7 @@ public class AuthController {
         response.sendRedirect(redirectUrl);
     }
 
-    @GetMapping("/oauth2/google/linkedin")
+    @GetMapping("/oauth2/linkedin/callback")
     public void handleLinkedinCallback(
             @AuthenticationPrincipal OAuth2User oauth2User,
             @RegisteredOAuth2AuthorizedClient("linkedin") OAuth2AuthorizedClient oAuth2AuthorizedClient,
