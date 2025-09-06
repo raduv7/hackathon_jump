@@ -37,7 +37,7 @@ public class AuthController {
     private JwtService jwtService;
 
     @GetMapping("/oauth2/google/callback")
-    public void handleCallback(
+    public void handleGoogleCallback(
         @AuthenticationPrincipal OAuth2User oauth2User,
         @RegisteredOAuth2AuthorizedClient("google") OAuth2AuthorizedClient oAuth2AuthorizedClient,
         HttpServletRequest request,
@@ -71,7 +71,60 @@ public class AuthController {
         response.sendRedirect(redirectUrl);
     }
 
-    @PostMapping("/tokens")
+    @GetMapping("/oauth2/google/linkedin")
+    public void handleLinkedinCallback(
+            @AuthenticationPrincipal OAuth2User oauth2User,
+            @RegisteredOAuth2AuthorizedClient("linkedin") OAuth2AuthorizedClient oAuth2AuthorizedClient,
+            HttpServletRequest request,
+            HttpServletResponse response
+    ) throws IOException {
+        log.debug("LinkedIn OAuth callback for user: {}", oauth2User.getName());
+        log.debug("LinkedIn OAuth attributes: {}", oauth2User.getAttributes());
+
+        // LinkedIn provides different attribute names
+        String email = oauth2User.getAttribute("emailAddress");
+        if (email == null) {
+            email = oauth2User.getAttribute("email");
+        }
+        
+        String firstName = oauth2User.getAttribute("firstName");
+        String lastName = oauth2User.getAttribute("lastName");
+        String name = "";
+        
+        if (firstName != null && lastName != null) {
+            name = firstName + " " + lastName;
+        } else if (firstName != null) {
+            name = firstName;
+        } else if (lastName != null) {
+            name = lastName;
+        } else {
+            name = oauth2User.getName(); // fallback to the principal name
+        }
+
+        if (email == null || email.isEmpty()) {
+            response.sendRedirect("http://localhost:4200/auth/oauth2/callback?error=invalid_user");
+            return;
+        }
+
+        String accessToken = oAuth2AuthorizedClient.getAccessToken().getTokenValue();
+        String refreshToken = oAuth2AuthorizedClient.getRefreshToken() == null ? "" :
+                oAuth2AuthorizedClient.getRefreshToken().getTokenValue();
+
+        userService.save(email, accessToken, EOauthProvider.LINKEDIN);
+
+        Map<String, Object> claims = Map.of(
+                "linkedinEmailAddresses", List.of(email)
+        );
+        String jwt = jwtService.issue(email, claims);
+
+        String redirectUrl = String.format(
+                "http://localhost:4200/auth/oauth2/callback?token=%s&username=%s&name=%s&provider=%s",
+                jwt, email, name, EOauthProvider.LINKEDIN
+        );
+        response.sendRedirect(redirectUrl);
+    }
+
+    @PostMapping("/auth/tokens")
     public ResponseEntity<String> handleMergeTokens(@RequestAttribute("session") Session session,
                                             @RequestBody String token2) {
         Session session2 = jwtService.validateAndGetSession(token2);

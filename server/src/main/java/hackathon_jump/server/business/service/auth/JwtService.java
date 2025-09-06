@@ -36,11 +36,10 @@ public class JwtService {
   }
 
   public String issue(Session session) {
-    Map<String, Object> claims = Map.of(
-      "googleEmailAddresses", session.getGoogleEmailAddresses(),
-      "facebookUsername", session.getFacebookUsername(),
-      "linkedinUsername", session.getLinkedinUsername()
-    );
+    Map<String, Object> claims = new HashMap<>();
+    claims.put("googleEmailAddresses", session.getGoogleEmailAddresses());
+    claims.put("facebookUsername", session.getFacebookUsername());
+    claims.put("linkedinUsername", session.getLinkedinUsername());
     Instant now = Instant.now();
     return Jwts.builder()
             .issuer(issuer)

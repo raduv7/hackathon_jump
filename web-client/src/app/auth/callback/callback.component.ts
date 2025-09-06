@@ -55,7 +55,7 @@ export class CallbackComponent implements OnInit {
         this.updateLocalStorageWithToken(params);
 
         console.log('Redirecting to dashboard...');
-        setTimeout(() => this.router.navigate(['/dashboard']), 2000);
+        setTimeout(() => this.router.navigate(['/settings']), 2000);
       } else {
         this.error = 'No authentication token received';
         console.error('No authentication token received in callback');
@@ -123,7 +123,7 @@ export class CallbackComponent implements OnInit {
       'Authorization': `Bearer ${token1}`,
       'Content-Type': 'application/json'
     };
-    
+
     this.http.post<string>('http://localhost:8080/auth/tokens', token2, { headers })
       .subscribe({
         next: (mergedToken) => {
@@ -137,5 +137,7 @@ export class CallbackComponent implements OnInit {
           console.log('Keeping existing token due to merge failure');
         }
       });
+
+    setTimeout(() => this.router.navigate(['/settings']), 2000);
   }
 }

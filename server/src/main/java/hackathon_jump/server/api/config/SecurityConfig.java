@@ -1,4 +1,4 @@
-package hackathon_jump.server.z_config;
+package hackathon_jump.server.api.config;
 
 import hackathon_jump.server.api.filter.JwtAuthenticationFilter;
 import hackathon_jump.server.api.filter.RequestLoggingFilter;
@@ -30,8 +30,10 @@ import java.util.List;
 @EnableWebSecurity
 @RequiredArgsConstructor
 public class SecurityConfig {
-    @Value("${app.oauth.login.url}")
-    private String oauthLoginUrl;
+    @Value("${app.oauth.google.login.url}")
+    private String oauthGoogleLoginUrl;
+    @Value("${app.oauth.linkedin.login.url}")
+    private String oauthLinkedinLoginUrl;
     @Value("${app.frontend.oauth.callback.url}")
     private String frontendOAuthCallbackUrl;
     @Value("${app.cors.allowed-origins}")
@@ -49,23 +51,29 @@ public class SecurityConfig {
                 .cors(cors -> cors.configurationSource(corsConfigurationSource()))
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/auth/**").permitAll()
+                        .requestMatchers("/login/**").permitAll()
                         .requestMatchers("/api/public/**").permitAll()
                         .anyRequest().authenticated()
                 )
                 .sessionManagement(session -> session
-                        .sessionCreationPolicy(SessionCreationPolicy.STATELESS)
+                        .sessionCreationPolicy(SessionCreationPolicy.IF_REQUIRED)
                 )
                 .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class)
                 .addFilterBefore(requestLoggingFilter, JwtAuthenticationFilter.class)
                 .oauth2Login(oauth2 -> oauth2
-                        .loginPage(oauthLoginUrl)
-                        .successHandler((request, response, authentication) -> {
-                            // Redirect to our custom callback endpoint
-                            request.getRequestDispatcher("/auth/oauth2/google/callback").forward(request, response);
-                        })
                         .userInfoEndpoint(userInfo -> userInfo
                                 .userService(oauth2UserService())
                         )
+                        .successHandler((request, response, authentication) -> {
+                            String requestUri = request.getRequestURI();
+                            if(requestUri.contains("google")) {
+                                request.getRequestDispatcher("/auth/oauth2/google/callback").forward(request, response);
+                            } else if(requestUri.contains("linkedin")) {
+                                request.getRequestDispatcher("/auth/oauth2/linkedin/callback").forward(request, response);
+                            } else if(requestUri.contains("facebook")) {
+                                request.getRequestDispatcher("/auth/oauth2/facebook/callback").forward(request, response);
+                            }
+                        })
                 );
 
         return http.build();

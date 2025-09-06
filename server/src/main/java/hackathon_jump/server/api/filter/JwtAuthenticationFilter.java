@@ -43,6 +43,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         jwt = authHeader.substring(7);
         try {
             Session session = jwtService.validateAndGetSession(jwt);
+            logger.debug("translated jwt into session: " + session);
             request.setAttribute("session", session);
 
 //            String userEmail = jwtService.validateAndGetSubject(jwt);

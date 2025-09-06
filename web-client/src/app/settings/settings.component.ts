@@ -86,7 +86,7 @@ export class SettingsComponent implements OnInit {
   // Google account methods
   signInWithGoogle() {
     // Redirect to Google OAuth flow
-    window.location.href = 'http://localhost:8080/auth/oauth2/google';
+    window.location.href = `${API_BASE_URL}/oauth2/authorization/google`;
   }
 
 
@@ -137,16 +137,8 @@ export class SettingsComponent implements OnInit {
 
   // LinkedIn account methods
   signInWithLinkedIn() {
-    // TODO: Implement LinkedIn OAuth flow
-    console.log('Sign in with LinkedIn clicked');
-    // For now, add a mock account for demonstration
-    this.linkedinAccount = {
-      id: 'linkedin_' + Date.now(),
-      name: 'Bob Johnson',
-      email: 'bob.johnson@linkedin.com',
-      picture: 'https://via.placeholder.com/40x40/0077B5/FFFFFF?text=BJ'
-    };
-    this.saveLinkedInAccount();
+    // Redirect to LinkedIn OAuth flow
+    window.location.href = `${API_BASE_URL}/oauth2/authorization/linkedin`;
   }
 
   private saveLinkedInAccount() {
