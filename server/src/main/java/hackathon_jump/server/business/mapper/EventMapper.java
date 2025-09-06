@@ -3,6 +3,7 @@ package hackathon_jump.server.business.mapper;
 import com.google.api.services.calendar.model.EventAttendee;
 import com.google.api.services.calendar.model.EventDateTime;
 import hackathon_jump.server.model.domain.Event;
+import hackathon_jump.server.model.domain.User;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import org.mapstruct.Named;
@@ -10,24 +11,41 @@ import org.mapstruct.Named;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.util.List;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 @Mapper(componentModel = "spring")
 public interface EventMapper {
+    static final Pattern MEET_PATTERN = Pattern.compile("https://meet\\.google\\.com/[a-z\\-]+");
+    static final Pattern ZOOM_PATTERN = Pattern.compile("https://(?:[a-z0-9]+\\.)?zoom\\.us/j/\\d+");
+    static final Pattern TEAMS_PATTERN = Pattern.compile("https://teams\\.microsoft\\.com/l/meetup-join/[^ \t\n]+");
+
     @Mapping(target = "id", ignore = true)
     @Mapping(source = "id", target = "googleId")
     @Mapping(source = "summary", target = "title")
     @Mapping(source = "location", target = "location")
     @Mapping(source = "description", target = "description")
-    @Mapping(source = "htmlLink", target = "link")
+    @Mapping(source = "googleEvent", target = "link", qualifiedByName = "extractMeetingLink")
     @Mapping(source = "start", target = "startDateTime", qualifiedByName = "dateTimeToLocalDateTime")
     @Mapping(source = "attendees", target = "attendees", qualifiedByName = "attendeesToStringList")
     @Mapping(source = "creator.email", target = "creator")
+    @Mapping(target = "owner", ignore = true)
     @Mapping(target = "shouldSendBot", constant = "false")
     @Mapping(target = "sentBot", constant = "false")
     Event googleEventToEvent(com.google.api.services.calendar.model.Event googleEvent);
 
     List<Event> googleEventsToEvents(List<com.google.api.services.calendar.model.Event> googleEvents);
+    
+    default List<Event> googleEventsToEvents(List<com.google.api.services.calendar.model.Event> googleEvents, User owner) {
+        return googleEvents.stream()
+                .map(googleEvent -> {
+                    Event event = googleEventToEvent(googleEvent);
+                    event.setOwner(owner);
+                    return event;
+                })
+                .collect(Collectors.toList());
+    }
 
     default void updateEvent(Event event, Event other) {
         if(other.getAttendees() != null) {
@@ -51,6 +69,39 @@ public interface EventMapper {
         if(other.getTitle() != null) {
             event.setTitle(other.getTitle());
         }
+    }
+
+    @Named("extractMeetingLink")
+    default String extractMeetingLink(com.google.api.services.calendar.model.Event event) {
+        String meetInDescription = isMeetingLink(event.getDescription());
+        if(meetInDescription != null) {
+            return meetInDescription;
+        }
+        String meetInLocation = isMeetingLink(event.getLocation());
+        if(meetInLocation != null) {
+            return meetInLocation;
+        }
+        return null;
+    }
+
+    default String isMeetingLink(String str) {
+        if (str == null || str.trim().isEmpty()) {
+            return null;
+        }
+        
+        Matcher m = MEET_PATTERN.matcher(str);
+        if (m.find()) {
+            return m.group();
+        }
+        m = ZOOM_PATTERN.matcher(str);
+        if (m.find()) {
+            return m.group();
+        }
+        m = TEAMS_PATTERN.matcher(str);
+        if (m.find()) {
+            return m.group();
+        }
+        return null;
     }
 
     @Named("dateTimeToLocalDateTime")

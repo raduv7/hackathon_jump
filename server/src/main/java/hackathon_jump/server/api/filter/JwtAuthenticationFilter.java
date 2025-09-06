@@ -38,18 +38,18 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     ) throws ServletException, IOException {
         log.debug("JWT Authentication filter processing request: {}", request.getRequestURI());
 
+        final String authHeader = request.getHeader("Authorization");
+        final String jwt;
         String requestUri = request.getRequestURI();
-        if(requestUri.startsWith("/auth") ||
-            requestUri.startsWith("/login") ||
-            requestUri.startsWith("/api/public")) {
+
+        if((authHeader == null || authHeader.isEmpty()) &&
+                (requestUri.startsWith("/auth") ||
+                requestUri.startsWith("/login") ||
+                requestUri.startsWith("/api/public"))) {
             filterChain.doFilter(request, response);
             return;
         }
 
-        
-        final String authHeader = request.getHeader("Authorization");
-        final String jwt;
-        
         if (authHeader == null || !authHeader.startsWith("Bearer ")) {
             logger.info("Invalid JWT token!");
             response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
@@ -93,7 +93,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 //            }
         } catch (Exception e) {
             // Token is invalid, send 401 response
-            logger.debug("Invalid JWT token: " + e.getMessage());
+            logger.error("Invalid parsed JWT token", e);
             response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
             response.getWriter().write("{\"error\":\"Unauthorized\",\"message\":\"Invalid JWT token\"}");
             response.setContentType("application/json");

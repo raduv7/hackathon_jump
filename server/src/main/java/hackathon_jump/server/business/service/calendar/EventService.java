@@ -33,6 +33,11 @@ public class EventService {
         return saveAll(events);
     }
 
+    public void refreshAll(Session session) {
+        List<Event> events = getAllFromGoogle(session);
+        saveAll(events);
+    }
+
     private List<Event> getAllFromGoogle(Session session) {
         List<Event> allEvents = new ArrayList<>();
 
@@ -41,7 +46,7 @@ public class EventService {
             List<com.google.api.services.calendar.model.Event> googleEvents = googleCalendarService.getCalendarEvents(user.getOauthToken());
 
             // Map Google events to domain events
-            List<Event> mappedEvents = eventMapper.googleEventsToEvents(googleEvents);
+            List<Event> mappedEvents = eventMapper.googleEventsToEvents(googleEvents, user);
             allEvents.addAll(mappedEvents);
 
             log.info("Mapped {} events for user: {}", mappedEvents.size(), googleEmailAddress);

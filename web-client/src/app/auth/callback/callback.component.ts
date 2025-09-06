@@ -125,7 +125,10 @@ export class CallbackComponent implements OnInit {
       'Content-Type': 'application/json'
     };
 
-    this.http.post<string>('http://localhost:8080/auth/tokens', token2, { headers })
+    this.http.post('http://localhost:8080/auth/tokens', token2, { 
+      headers,
+      responseType: 'text'
+    })
       .subscribe({
         next: (mergedToken) => {
           console.log('Tokens merged successfully');

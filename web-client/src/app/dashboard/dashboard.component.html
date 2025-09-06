@@ -26,9 +26,13 @@
         <h3>Recent Events</h3>
         <div class="events-list" *ngIf="events.length > 0; else noEvents">
           <div class="event-item" *ngFor="let event of events">
-            <div class="event-time">{{ formatEventTime(event.start) }}</div>
-            <div class="event-title">{{ event.summary }}</div>
-            <div class="event-location" *ngIf="event.location">{{ event.location }}</div>
+            <div class="event-time">{{ formatEventTime(event.startDateTime) }}</div>
+            <div class="event-title">{{ event.title }}</div>
+            <div class="event-creator">by {{ event.creator }}</div>
+            <div class="event-location" *ngIf="event.location">📍 {{ event.location }}</div>
+            <div class="event-link" *ngIf="event.link">
+              <a [href]="event.link" target="_blank" class="meeting-link">Join Meeting</a>
+            </div>
           </div>
         </div>
         <ng-template #noEvents>

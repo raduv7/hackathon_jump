@@ -1,9 +1,11 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { API_BASE_URL } from '../security.config';
+import { EventsService, Event } from '../services/events.service';
+import { Subscription } from 'rxjs';
 
 interface CalendarEvent {
   id: string;
@@ -27,31 +29,41 @@ interface CalendarEvent {
   templateUrl: './dashboard.component.html',
   styleUrls: ['./dashboard.component.scss']
 })
-export class DashboardComponent implements OnInit {
+export class DashboardComponent implements OnInit, OnDestroy {
   userEmail: string = '';
   userName: string = '';
   userPicture: string = '';
   userProvider: string = '';
   
-  events: CalendarEvent[] = [];
+  events: Event[] = [];
   autoRefresh: boolean = false;
   notifications: boolean = true;
   
   private refreshInterval: any;
+  private eventsSubscription: Subscription = new Subscription();
 
   constructor(
     private router: Router,
-    private http: HttpClient
+    private http: HttpClient,
+    private eventsService: EventsService
   ) {}
 
   ngOnInit() {
     this.loadUserInfo();
+    this.subscribeToEvents();
   }
 
   ngOnDestroy() {
     if (this.refreshInterval) {
       clearInterval(this.refreshInterval);
     }
+    this.eventsSubscription.unsubscribe();
+  }
+
+  subscribeToEvents() {
+    this.eventsSubscription = this.eventsService.events$.subscribe(events => {
+      this.events = events;
+    });
   }
 
   private loadUserInfo() {
@@ -71,30 +83,21 @@ export class DashboardComponent implements OnInit {
   }
 
   loadCalendarEvents() {
-    const headers = this.getAuthHeaders();
-    
-    this.http.get<CalendarEvent[]>(`${API_BASE_URL}/api/calendar/events`, { headers })
-      .subscribe({
-        next: (events) => {
-          this.events = events;
-          console.log('Calendar events loaded:', events);
-        },
-        error: (error) => {
-          console.error('Error loading calendar events:', error);
-          // Handle error - maybe show a toast notification
-        }
-      });
+    this.eventsService.loadEvents().subscribe({
+      next: (events) => {
+        console.log('Calendar events loaded:', events);
+        this.eventsService.updateEvents(events);
+      },
+      error: (error) => {
+        console.error('Error loading calendar events:', error);
+        // Handle error - maybe show a toast notification
+      }
+    });
   }
 
-  formatEventTime(start: CalendarEvent['start']): string {
-    if (start.dateTime) {
-      const date = new Date(start.dateTime);
-      return date.toLocaleString();
-    } else if (start.date) {
-      const date = new Date(start.date);
-      return date.toLocaleDateString();
-    }
-    return 'No time specified';
+  formatEventTime(startDateTime: string): string {
+    const date = new Date(startDateTime);
+    return date.toLocaleString();
   }
 
   toggleAutoRefresh() {

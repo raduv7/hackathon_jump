@@ -9,10 +9,7 @@ import javax.crypto.SecretKey;
 import java.nio.charset.StandardCharsets;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
 
@@ -90,9 +87,11 @@ public class JwtService {
   }
 
   public Session mergeSessions(Session session, Session other) {
+    List<String> otherGoogleEmailAddresses = other.getGoogleEmailAddresses() == null ? Collections.emptyList() : other.getGoogleEmailAddresses();
     List<String> googleEmailAddresses = Stream.concat(
             session.getGoogleEmailAddresses().stream(),
-            other.getGoogleEmailAddresses().stream())
+            otherGoogleEmailAddresses.stream()
+            )
             .distinct().toList();
     String facebookUsername = other.getFacebookUsername() == null ? session.getFacebookUsername() : other.getFacebookUsername();
     String linkedinUsername = other.getLinkedinUsername() == null ? session.getLinkedinUsername() : other.getLinkedinUsername();

@@ -1,5 +1,5 @@
 <div class="future-events-container">
-  
+
   <main class="future-events-main">
     <!-- Page Header -->
     <div class="page-header">
@@ -16,15 +16,15 @@
             <polyline points="15,18 9,12 15,6"></polyline>
           </svg>
         </button>
-        
+
         <h2 class="month-year">{{ getMonthYearString() }}</h2>
-        
+
         <button class="nav-btn" (click)="nextMonth()" title="Next Month">
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
             <polyline points="9,18 15,12 9,6"></polyline>
           </svg>
         </button>
-        
+
         <button class="today-btn" (click)="goToToday()">Today</button>
       </div>
 
@@ -40,16 +40,21 @@
         <div class="day-header">Sat</div>
 
         <!-- Calendar Days -->
-        <div 
-          *ngFor="let day of calendarDays" 
+        <div
+          *ngFor="let day of calendarDays"
           class="calendar-day"
           [class.empty-day]="day === null"
           [class.today]="day && isToday(day)"
           [class.future-day]="day && isFutureDate(day)"
           [class.past-day]="day && !isFutureDate(day)"
+          [class.has-events]="day && getEventsForDate(day).length > 0"
           (click)="day && onDateClick(day)"
         >
           <span *ngIf="day" class="day-number">{{ day.getDate() }}</span>
+          <div *ngIf="day && getEventsForDate(day).length > 0" class="event-indicators">
+            <div class="event-dot" *ngFor="let event of getEventsForDate(day).slice(0, 3)"></div>
+            <div *ngIf="getEventsForDate(day).length > 3" class="more-events">+{{ getEventsForDate(day).length - 3 }}</div>
+          </div>
         </div>
       </div>
     </div>
@@ -62,9 +67,41 @@
 
       <div class="events-list" *ngIf="futureEvents.length > 0; else noEvents">
         <div class="event-item" *ngFor="let event of futureEvents">
-          <div class="event-date">{{ event.date }}</div>
-          <div class="event-title">{{ event.title }}</div>
-          <div class="event-time">{{ event.time }}</div>
+          <div class="event-header">
+            <div class="event-title">{{ event.title }}</div>
+            <div class="event-actions">
+              <!-- Red circle for empty link -->
+              <div *ngIf="hasEmptyLink(event)" class="warning-indicator" title="No meeting link available">
+                <div class="red-circle"></div>
+              </div>
+              <!-- Yellow bubble for sentBot -->
+              <div *ngIf="event.sentBot" class="sent-bot-indicator" title="Bot message sent">
+                <div class="yellow-bubble">🤖</div>
+              </div>
+            </div>
+          </div>
+
+          <div class="event-details">
+            <div class="event-time">{{ formatEventTime(event.startDateTime) }}</div>
+            <div class="event-creator">by {{ event.creator }}</div>
+            <div *ngIf="event.description" class="event-description">{{ event.description }}</div>
+            <div *ngIf="event.location" class="event-location">📍 {{ event.location }}</div>
+            <div *ngIf="event.link" class="event-link">
+              <a [href]="event.link" target="_blank" class="meeting-link">Join Meeting</a>
+            </div>
+          </div>
+
+          <div class="event-controls">
+            <label class="checkbox-container">
+              <input
+                type="checkbox"
+                [checked]="event.shouldSendBot"
+                (change)="updateShouldSendBot(event)"
+              >
+              <span class="checkmark"></span>
+              Send Bot Message
+            </label>
+          </div>
         </div>
       </div>
 

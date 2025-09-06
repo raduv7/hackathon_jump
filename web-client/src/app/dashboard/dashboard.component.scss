@@ -249,9 +249,34 @@
   margin-bottom: 0.25rem;
 }
 
+.event-creator {
+  font-size: 0.8rem;
+  color: #888;
+  margin-bottom: 0.25rem;
+}
+
 .event-location {
   font-size: 0.8rem;
   color: #666;
+  margin-bottom: 0.25rem;
+}
+
+.event-link {
+  .meeting-link {
+    color: #4CAF50;
+    text-decoration: none;
+    font-size: 0.8rem;
+    font-weight: 500;
+    padding: 0.25rem 0.5rem;
+    background: #e8f5e8;
+    border-radius: 4px;
+    transition: all 0.2s ease;
+
+    &:hover {
+      background: #d4edda;
+      text-decoration: underline;
+    }
+  }
 }
 
 .no-events {

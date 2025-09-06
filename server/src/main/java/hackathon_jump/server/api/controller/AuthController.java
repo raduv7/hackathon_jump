@@ -114,7 +114,7 @@ public class AuthController {
         userService.save(email, accessToken, EOauthProvider.LINKEDIN);
 
         Map<String, Object> claims = Map.of(
-                "linkedinUsername", List.of(email)
+                "linkedinUsername", email
         );
         String jwt = jwtService.issue(email, claims);
 
@@ -161,7 +161,7 @@ public class AuthController {
         userService.save(email, accessToken, EOauthProvider.FACEBOOK);
 
         Map<String, Object> claims = Map.of(
-                "facebookUsername", List.of(email)
+                "facebookUsername", email
         );
         String jwt = jwtService.issue(email, claims);
 

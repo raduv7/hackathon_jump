@@ -178,6 +178,34 @@
     font-size: 0.9rem;
     line-height: 1;
   }
+
+  &.has-events {
+    background: #f0f8ff;
+    border: 1px solid #b3d9ff;
+  }
+
+  .event-indicators {
+    position: absolute;
+    bottom: 2px;
+    right: 2px;
+    display: flex;
+    gap: 2px;
+    align-items: center;
+
+    .event-dot {
+      width: 6px;
+      height: 6px;
+      background: #667eea;
+      border-radius: 50%;
+    }
+
+    .more-events {
+      font-size: 0.6rem;
+      color: #667eea;
+      font-weight: 600;
+      margin-left: 2px;
+    }
+  }
 }
 
 /* Events Section */
@@ -219,23 +247,150 @@
     transform: translateX(4px);
   }
 
-  .event-date {
-    font-size: 0.8rem;
-    color: #666;
-    font-weight: 500;
-    margin-bottom: 0.25rem;
+  .event-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 0.5rem;
+
+    .event-title {
+      font-size: 1.1rem;
+      font-weight: 600;
+      color: #333;
+      margin: 0;
+      flex: 1;
+    }
+
+    .event-actions {
+      display: flex;
+      gap: 0.5rem;
+      align-items: center;
+
+      .warning-indicator {
+        .red-circle {
+          width: 12px;
+          height: 12px;
+          background: #dc3545;
+          border-radius: 50%;
+          border: 2px solid white;
+          box-shadow: 0 0 0 1px #dc3545;
+        }
+      }
+
+      .sent-bot-indicator {
+        .yellow-bubble {
+          background: #ffc107;
+          color: #333;
+          border-radius: 50%;
+          width: 20px;
+          height: 20px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          font-size: 0.8rem;
+          border: 2px solid white;
+          box-shadow: 0 0 0 1px #ffc107;
+        }
+      }
+    }
   }
 
-  .event-title {
-    font-size: 1rem;
-    font-weight: 600;
-    color: #333;
-    margin-bottom: 0.25rem;
+  .event-details {
+    margin-bottom: 0.75rem;
+
+    .event-time {
+      font-size: 0.9rem;
+      color: #666;
+      font-weight: 500;
+      margin-bottom: 0.25rem;
+    }
+
+    .event-creator {
+      font-size: 0.8rem;
+      color: #888;
+      margin-bottom: 0.25rem;
+    }
+
+    .event-description {
+      font-size: 0.9rem;
+      color: #555;
+      margin-bottom: 0.25rem;
+      line-height: 1.4;
+    }
+
+    .event-location {
+      font-size: 0.8rem;
+      color: #666;
+      margin-bottom: 0.25rem;
+    }
+
+    .event-link {
+      .meeting-link {
+        color: #667eea;
+        text-decoration: none;
+        font-size: 0.9rem;
+        font-weight: 500;
+        padding: 0.25rem 0.5rem;
+        background: #e3f2fd;
+        border-radius: 4px;
+        transition: all 0.2s ease;
+
+        &:hover {
+          background: #bbdefb;
+          text-decoration: underline;
+        }
+      }
+    }
   }
 
-  .event-time {
-    font-size: 0.9rem;
-    color: #666;
+  .event-controls {
+    .checkbox-container {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      cursor: pointer;
+      font-size: 0.9rem;
+      color: #555;
+
+      input[type="checkbox"] {
+        display: none;
+      }
+
+      .checkmark {
+        width: 18px;
+        height: 18px;
+        border: 2px solid #667eea;
+        border-radius: 3px;
+        position: relative;
+        transition: all 0.2s ease;
+
+        &::after {
+          content: '';
+          position: absolute;
+          left: 5px;
+          top: 2px;
+          width: 4px;
+          height: 8px;
+          border: solid white;
+          border-width: 0 2px 2px 0;
+          transform: rotate(45deg);
+          opacity: 0;
+          transition: opacity 0.2s ease;
+        }
+      }
+
+      input[type="checkbox"]:checked + .checkmark {
+        background: #667eea;
+
+        &::after {
+          opacity: 1;
+        }
+      }
+
+      &:hover .checkmark {
+        border-color: #5a6fd8;
+      }
+    }
   }
 }
 
