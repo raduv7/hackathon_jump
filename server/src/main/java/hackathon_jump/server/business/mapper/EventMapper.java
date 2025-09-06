@@ -73,18 +73,18 @@ public interface EventMapper {
 
     @Named("extractMeetingLink")
     default String extractMeetingLink(com.google.api.services.calendar.model.Event event) {
-        String meetInDescription = isMeetingLink(event.getDescription());
+        String meetInDescription = findMeetingLinkInText(event.getDescription());
         if(meetInDescription != null) {
             return meetInDescription;
         }
-        String meetInLocation = isMeetingLink(event.getLocation());
+        String meetInLocation = findMeetingLinkInText(event.getLocation());
         if(meetInLocation != null) {
             return meetInLocation;
         }
         return null;
     }
 
-    default String isMeetingLink(String str) {
+    private String findMeetingLinkInText(String str) {
         if (str == null || str.trim().isEmpty()) {
             return null;
         }

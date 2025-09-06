@@ -30,8 +30,9 @@
             <div class="event-title">{{ event.title }}</div>
             <div class="event-creator">by {{ event.creator }}</div>
             <div class="event-location" *ngIf="event.location">📍 {{ event.location }}</div>
-            <div class="event-link" *ngIf="event.link">
-              <a [href]="event.link" target="_blank" class="meeting-link">Join Meeting</a>
+            <div class="event-link">
+              <a *ngIf="event.link" [href]="event.link" target="_blank" class="meeting-link">Join Meeting</a>
+              <span *ngIf="!event.link" class="no-meeting-link">No Meeting Link</span>
             </div>
           </div>
         </div>

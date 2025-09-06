@@ -1,5 +1,6 @@
 package hackathon_jump.server.api.controller;
 
+import com.google.api.client.http.HttpStatusCodes;
 import hackathon_jump.server.business.service.calendar.EventService;
 import hackathon_jump.server.model.domain.Event;
 import hackathon_jump.server.model.dto.Session;
@@ -7,6 +8,7 @@ import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatusCode;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -27,7 +29,7 @@ public class EventController {
             List<Event> events = eventService.getAll(session);
             return ResponseEntity.ok(events);
         } catch (Exception e) {
-            return ResponseEntity.badRequest().build();
+            return ResponseEntity.status(HttpStatusCodes.STATUS_CODE_UNAUTHORIZED).build();
         }
     }
 

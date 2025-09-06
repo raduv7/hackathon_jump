@@ -35,46 +35,36 @@ public class GoogleCalendarService {
         }
     }
 
-    public List<Event> getCalendarEvents(String accessToken) {
-        try {
-            Credential credential = new GoogleCredential()
-                    .setAccessToken(accessToken);
+    public List<Event> getCalendarEvents(String accessToken) throws IOException {
+        Credential credential = new GoogleCredential()
+                .setAccessToken(accessToken);
 
-            Calendar service = new Calendar.Builder(HTTP_TRANSPORT, GsonFactory.getDefaultInstance(), credential)
-                    .setApplicationName(APPLICATION_NAME)
-                    .build();
+        Calendar service = new Calendar.Builder(HTTP_TRANSPORT, GsonFactory.getDefaultInstance(), credential)
+                .setApplicationName(APPLICATION_NAME)
+                .build();
 
-            // Get all calendars
-            CalendarList calendarList = service.calendarList().list().execute();
-            List<CalendarListEntry> calendars = calendarList.getItems();
-            
-            List<Event> allEvents = new ArrayList<>();
-            
-            // Fetch events from each calendar
-            for (CalendarListEntry calendar : calendars) {
-                try {
-                    Events events = service.events()
-                            .list(calendar.getId())
-                            .setOrderBy("startTime")
-                            .setSingleEvents(true)
-                            .execute();
+        // Get all calendars
+        CalendarList calendarList = service.calendarList().list().execute();
+        List<CalendarListEntry> calendars = calendarList.getItems();
 
-                    List<Event> googleEvents = events.getItems();
-                    if (googleEvents != null) {
-                        allEvents.addAll(googleEvents);
-                        log.info("Retrieved {} events from calendar: {}", googleEvents.size(), calendar.getSummary());
-                    }
-                } catch (IOException e) {
-                    log.warn("Failed to retrieve events from calendar: {}", calendar.getSummary(), e);
-                }
+        List<Event> allEvents = new ArrayList<>();
+
+        // Fetch events from each calendar
+        for (CalendarListEntry calendar : calendars) {
+            Events events = service.events()
+                    .list(calendar.getId())
+                    .setOrderBy("startTime")
+                    .setSingleEvents(true)
+                    .execute();
+
+            List<Event> googleEvents = events.getItems();
+            if (googleEvents != null) {
+                allEvents.addAll(googleEvents);
+                log.info("Retrieved {} events from calendar: {}", googleEvents.size(), calendar.getSummary());
             }
-            
-            log.info("Retrieved {} total calendar events from {} calendars", allEvents.size(), calendars.size());
-            return allEvents;
-
-        } catch (IOException e) {
-            log.error("Error retrieving calendar events", e);
-            return Collections.emptyList();
         }
+
+        log.info("Retrieved {} total calendar events from {} calendars", allEvents.size(), calendars.size());
+        return allEvents;
     }
 }

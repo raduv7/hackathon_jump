@@ -11,6 +11,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
@@ -28,24 +29,23 @@ public class EventService {
     @Autowired
     private EventMapper eventMapper;
 
-    public List<Event> getAll(Session session) {
+    public List<Event> getAll(Session session) throws IOException {
         List<Event> events = getAllFromGoogle(session);
         return saveAll(events);
     }
 
-    public void refreshAll(Session session) {
+    public void refreshAll(Session session) throws IOException {
         List<Event> events = getAllFromGoogle(session);
         saveAll(events);
     }
 
-    private List<Event> getAllFromGoogle(Session session) {
+    private List<Event> getAllFromGoogle(Session session) throws IOException {
         List<Event> allEvents = new ArrayList<>();
 
         for(String googleEmailAddress : session.getGoogleEmailAddresses()) {
             User user = userRepository.findByUsernameAndProvider(googleEmailAddress, EOauthProvider.GOOGLE).orElseThrow();
             List<com.google.api.services.calendar.model.Event> googleEvents = googleCalendarService.getCalendarEvents(user.getOauthToken());
 
-            // Map Google events to domain events
             List<Event> mappedEvents = eventMapper.googleEventsToEvents(googleEvents, user);
             allEvents.addAll(mappedEvents);
 

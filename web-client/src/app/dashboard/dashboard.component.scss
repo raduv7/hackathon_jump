@@ -277,6 +277,17 @@
       text-decoration: underline;
     }
   }
+
+  .no-meeting-link {
+    color: #856404;
+    font-size: 0.8rem;
+    font-weight: 500;
+    padding: 0.25rem 0.5rem;
+    background: #fff3cd;
+    border: 1px solid #ffeaa7;
+    border-radius: 4px;
+    display: inline-block;
+  }
 }
 
 .no-events {
