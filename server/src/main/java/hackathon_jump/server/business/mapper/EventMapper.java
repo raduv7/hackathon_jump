@@ -18,6 +18,7 @@ public interface EventMapper {
     @Mapping(source = "id", target = "googleId")
     @Mapping(source = "summary", target = "title")
     @Mapping(source = "location", target = "location")
+    @Mapping(source = "description", target = "description")
     @Mapping(source = "htmlLink", target = "link")
     @Mapping(source = "start", target = "startDateTime", qualifiedByName = "dateTimeToLocalDateTime")
     @Mapping(source = "attendees", target = "attendees", qualifiedByName = "attendeesToStringList")
@@ -27,6 +28,30 @@ public interface EventMapper {
     Event googleEventToEvent(com.google.api.services.calendar.model.Event googleEvent);
 
     List<Event> googleEventsToEvents(List<com.google.api.services.calendar.model.Event> googleEvents);
+
+    default void updateEvent(Event event, Event other) {
+        if(other.getAttendees() != null) {
+            event.setAttendees(other.getAttendees());
+        }
+        if(other.getCreator() != null) {
+            event.setCreator(other.getCreator());
+        }
+        if(other.getDescription() != null) {
+            event.setDescription(other.getDescription());
+        }
+        if(other.getLink() != null) {
+            event.setLink(other.getLink());
+        }
+        if(other.getLocation() != null) {
+            event.setLocation(other.getLocation());
+        }
+        if(other.getStartDateTime() != null) {
+            event.setStartDateTime(other.getStartDateTime());
+        }
+        if(other.getTitle() != null) {
+            event.setTitle(other.getTitle());
+        }
+    }
 
     @Named("dateTimeToLocalDateTime")
     default LocalDateTime dateTimeToLocalDateTime(EventDateTime eventDateTime) {

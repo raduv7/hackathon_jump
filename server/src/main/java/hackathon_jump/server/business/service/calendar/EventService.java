@@ -1,6 +1,7 @@
 package hackathon_jump.server.business.service.calendar;
 
 import hackathon_jump.server.business.mapper.EventMapper;
+import hackathon_jump.server.infrastructure.repository.IEventRepository;
 import hackathon_jump.server.infrastructure.repository.IUserRepository;
 import hackathon_jump.server.model.EOauthProvider;
 import hackathon_jump.server.model.domain.Event;
@@ -12,10 +13,13 @@ import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 @Service
 @Slf4j
 public class EventService {
+    @Autowired
+    private IEventRepository eventRepository;
     @Autowired
     private IUserRepository userRepository;
     @Autowired
@@ -24,20 +28,42 @@ public class EventService {
     private EventMapper eventMapper;
 
     public List<Event> getAll(Session session) {
+        List<Event> events = getAllFromGoogle(session);
+        return saveAll(events);
+    }
+
+    private List<Event> getAllFromGoogle(Session session) {
         List<Event> allEvents = new ArrayList<>();
-        
+
         for(String googleEmailAddress : session.getGoogleEmailAddresses()) {
             User user = userRepository.findByUsernameAndProvider(googleEmailAddress, EOauthProvider.GOOGLE).orElseThrow();
             List<com.google.api.services.calendar.model.Event> googleEvents = googleCalendarService.getCalendarEvents(user.getOauthToken());
-            
+
             // Map Google events to domain events
             List<Event> mappedEvents = eventMapper.googleEventsToEvents(googleEvents);
             allEvents.addAll(mappedEvents);
-            
+
             log.info("Mapped {} events for user: {}", mappedEvents.size(), googleEmailAddress);
         }
-        
+
         log.info("Total events retrieved: {}", allEvents.size());
         return allEvents;
+    }
+
+    private List<Event> saveAll(List<Event> events) {
+        List<Event> savedEvents = new ArrayList<>();
+
+        for(Event event : events) {
+            Optional<Event> optionalOldEvent = eventRepository.findOneByGoogleId(event.getGoogleId());
+            if(optionalOldEvent.isPresent()) {
+                Event oldEvent = optionalOldEvent.get();
+                eventMapper.updateEvent(oldEvent, event);
+                savedEvents.add(eventRepository.save(oldEvent));
+            } else {
+                savedEvents.add(eventRepository.save(event));
+            }
+        }
+
+        return savedEvents;
     }
 }

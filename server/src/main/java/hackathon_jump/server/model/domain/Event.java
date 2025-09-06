@@ -20,6 +20,7 @@ public class Event {
     @Id
     @GeneratedValue
     private Long id;
+    @Column(unique = true)
     private String googleId;
     private String title;
     private String description;
