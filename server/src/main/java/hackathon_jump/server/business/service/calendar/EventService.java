@@ -6,7 +6,6 @@ import hackathon_jump.server.model.EOauthProvider;
 import hackathon_jump.server.model.domain.Event;
 import hackathon_jump.server.model.domain.User;
 import hackathon_jump.server.model.dto.Session;
-import com.google.api.services.calendar.model.Event as GoogleEvent;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -29,7 +28,7 @@ public class EventService {
         
         for(String googleEmailAddress : session.getGoogleEmailAddresses()) {
             User user = userRepository.findByUsernameAndProvider(googleEmailAddress, EOauthProvider.GOOGLE).orElseThrow();
-            List<GoogleEvent> googleEvents = googleCalendarService.getCalendarEvents(user.getOauthToken());
+            List<com.google.api.services.calendar.model.Event> googleEvents = googleCalendarService.getCalendarEvents(user.getOauthToken());
             
             // Map Google events to domain events
             List<Event> mappedEvents = eventMapper.googleEventsToEvents(googleEvents);

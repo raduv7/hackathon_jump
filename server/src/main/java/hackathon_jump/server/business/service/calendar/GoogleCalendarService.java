@@ -8,7 +8,7 @@ import com.google.api.client.json.gson.GsonFactory;
 import com.google.api.services.calendar.Calendar;
 import com.google.api.services.calendar.model.CalendarList;
 import com.google.api.services.calendar.model.CalendarListEntry;
-import com.google.api.services.calendar.model.Event as GoogleEvent;
+import com.google.api.services.calendar.model.Event;
 import com.google.api.services.calendar.model.Events;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -16,8 +16,6 @@ import org.springframework.stereotype.Service;
 import java.io.IOException;
 import java.security.GeneralSecurityException;
 
-import java.time.LocalDateTime;
-import java.time.ZoneOffset;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -37,7 +35,7 @@ public class GoogleCalendarService {
         }
     }
 
-    public List<GoogleEvent> getCalendarEvents(String accessToken) {
+    public List<Event> getCalendarEvents(String accessToken) {
         try {
             Credential credential = new GoogleCredential()
                     .setAccessToken(accessToken);
@@ -50,7 +48,7 @@ public class GoogleCalendarService {
             CalendarList calendarList = service.calendarList().list().execute();
             List<CalendarListEntry> calendars = calendarList.getItems();
             
-            List<GoogleEvent> allEvents = new ArrayList<>();
+            List<Event> allEvents = new ArrayList<>();
             
             // Fetch events from each calendar
             for (CalendarListEntry calendar : calendars) {
@@ -61,7 +59,7 @@ public class GoogleCalendarService {
                             .setSingleEvents(true)
                             .execute();
 
-                    List<GoogleEvent> googleEvents = events.getItems();
+                    List<Event> googleEvents = events.getItems();
                     if (googleEvents != null) {
                         allEvents.addAll(googleEvents);
                         log.info("Retrieved {} events from calendar: {}", googleEvents.size(), calendar.getSummary());
