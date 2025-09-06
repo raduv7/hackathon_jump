@@ -9,10 +9,10 @@ import org.springframework.stereotype.Service;
 
 import java.util.Collections;
 
+@Deprecated
 @Service
 @RequiredArgsConstructor
 public class CustomUserDetailsService implements UserDetailsService {
-    @Deprecated
     @Override
     public UserDetails loadUserByUsername(String email) throws UsernameNotFoundException {
         // todo

@@ -5,6 +5,7 @@ import hackathon_jump.server.business.service.auth.UserService;
 import hackathon_jump.server.model.EOauthProvider;
 import hackathon_jump.server.model.dto.Session;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.oauth2.client.OAuth2AuthorizedClient;
@@ -34,6 +35,9 @@ public class AuthController {
     @Autowired
     private JwtService jwtService;
 
+    @Value("${app.frontend-url}")
+    private String frontendUrl;
+
     @GetMapping("/oauth2/google/callback")
     public void handleGoogleCallback(
         @AuthenticationPrincipal OAuth2User oauth2User,
@@ -47,7 +51,7 @@ public class AuthController {
         String name = oauth2User.getAttribute("name");
 
         if (email == null || email.isEmpty()) {
-            response.sendRedirect("http://localhost:4200/auth/oauth2/callback?error=invalid_user");
+            response.sendRedirect(frontendUrl + "/auth/oauth2/callback?error=invalid_user");
             return;
         }
         // Get the access token from the OAuth2AuthorizedClient
@@ -63,8 +67,8 @@ public class AuthController {
         String jwt = jwtService.issue(email, claims);
 
         String redirectUrl = String.format(
-            "http://localhost:4200/auth/oauth2/callback?token=%s&email=%s&name=%s&provider=%s",
-            jwt, email, name, EOauthProvider.GOOGLE
+            "%s/auth/oauth2/callback?token=%s&email=%s&name=%s&provider=%s",
+            frontendUrl, jwt, email, name, EOauthProvider.GOOGLE
         );
         response.sendRedirect(redirectUrl);
     }
@@ -96,7 +100,7 @@ public class AuthController {
         }
 
         if (email == null || email.isEmpty()) {
-            response.sendRedirect("http://localhost:4200/auth/oauth2/callback?error=invalid_user");
+            response.sendRedirect(frontendUrl + "/auth/oauth2/callback?error=invalid_user");
             return;
         }
 
@@ -112,8 +116,8 @@ public class AuthController {
         String jwt = jwtService.issue(email, claims);
 
         String redirectUrl = String.format(
-                "http://localhost:4200/auth/oauth2/callback?token=%s&username=%s&name=%s&provider=%s",
-                jwt, email, name, EOauthProvider.LINKEDIN
+                "%s/auth/oauth2/callback?token=%s&username=%s&name=%s&provider=%s",
+                frontendUrl, jwt, email, name, EOauthProvider.LINKEDIN
         );
         response.sendRedirect(redirectUrl);
     }
@@ -143,7 +147,7 @@ public class AuthController {
         }
 
         if (email == null || email.isEmpty()) {
-            response.sendRedirect("http://localhost:4200/auth/oauth2/callback?error=invalid_user");
+            response.sendRedirect(frontendUrl + "/auth/oauth2/callback?error=invalid_user");
             return;
         }
 
@@ -159,8 +163,8 @@ public class AuthController {
         String jwt = jwtService.issue(email, claims);
 
         String redirectUrl = String.format(
-                "http://localhost:4200/auth/oauth2/callback?token=%s&username=%s&name=%s&provider=%s",
-                jwt, email, name, EOauthProvider.FACEBOOK
+                "%s/auth/oauth2/callback?token=%s&username=%s&name=%s&provider=%s",
+                frontendUrl, jwt, email, name, EOauthProvider.FACEBOOK
         );
         response.sendRedirect(redirectUrl);
     }

@@ -40,6 +40,8 @@ public class SecurityConfig {
     private String oauthGoogleLoginUrl;
     @Value("${app.oauth.linkedin.login.url}")
     private String oauthLinkedinLoginUrl;
+    @Value("${app.oauth.facebook.login.url}")
+    private String oauthFacebookLoginUrl;
     @Value("${app.frontend.oauth.callback.url}")
     private String frontendOAuthCallbackUrl;
     @Value("${app.cors.allowed-origins}")
