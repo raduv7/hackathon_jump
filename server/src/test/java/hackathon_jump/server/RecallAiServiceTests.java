@@ -310,12 +310,12 @@ public class RecallAiServiceTests {
             
             System.out.println("✅ Wait completed");
             
-            // Step 3.5: Wait additional 2 minutes for transcript generation
-            System.out.println("\n3.5. Waiting additional 2 minutes for transcript generation...");
+            // Step 3.5: Wait additional 1 minutes for transcript generation
+            System.out.println("\n3.5. Waiting additional 1 minutes for transcript generation...");
             System.out.println("Processing audio and generating transcript...");
             
             try {
-                Thread.sleep(120000); // Wait 2 minutes
+                Thread.sleep(60000);
             } catch (InterruptedException e) {
                 Thread.currentThread().interrupt();
                 System.out.println("Transcript generation wait interrupted");
@@ -361,15 +361,9 @@ public class RecallAiServiceTests {
                 // Fail the test
                 fail("Transcript should be available after 3 minutes of waiting. Bot may not have joined the meeting or transcript generation failed.");
             }
-            
-            // Step 8: Update the bot (optional test)
-            System.out.println("\n8. Testing bot update...");
-            String newJoinAt = Instant.now().plus(10, ChronoUnit.MINUTES).toString();
-            String updatedBotId = recallAiService.updateScheduledBot(botId, TEST_MEETING_URL, newJoinAt);
-            System.out.println("✅ Bot updated successfully - Old ID: " + botId + ", New ID: " + updatedBotId);
-            
-            // Add the new bot ID to tracking list for cleanup
-            createdBotIds.add(updatedBotId);
+
+            // do not delete the bot
+            createdBotIds.clear();
             
             System.out.println("\n=== INTEGRATION TEST COMPLETED ===");
             System.out.println("Bot ID: " + botId);

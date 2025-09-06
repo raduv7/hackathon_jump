@@ -5,7 +5,9 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.*;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
+import org.springframework.web.util.UriComponentsBuilder;
 
+import java.net.URI;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -353,6 +355,7 @@ public class RecallAiService {
         log.info("Retrieving transcript download URL for bot: {}", botId);
         
         try {
+            // Step 1: Get bot details to find transcript ID
             Map<String, Object> botDetails = retrieveBot(botId);
             
             if (botDetails != null && botDetails.containsKey("recordings")) {
@@ -370,15 +373,12 @@ public class RecallAiService {
                                 @SuppressWarnings("unchecked")
                                 Map<String, Object> transcript = (Map<String, Object>) mediaShortcuts.get("transcript");
                                 
-                                if (transcript.containsKey("data")) {
-                                    @SuppressWarnings("unchecked")
-                                    Map<String, Object> data = (Map<String, Object>) transcript.get("data");
+                                if (transcript.containsKey("id")) {
+                                    String transcriptId = (String) transcript.get("id");
+                                    log.info("Found transcript ID for bot {}: {}", botId, transcriptId);
                                     
-                                    if (data.containsKey("download_url")) {
-                                        String downloadUrl = (String) data.get("download_url");
-                                        log.info("Found transcript download URL for bot {}: {}", botId, downloadUrl);
-                                        return downloadUrl;
-                                    }
+                                    // Step 2: Call transcript API to get download URL
+                                    return getTranscriptDownloadUrlFromId(transcriptId);
                                 }
                             }
                         }
@@ -386,12 +386,53 @@ public class RecallAiService {
                 }
             }
             
-            log.warn("No transcript download URL found for bot: {}", botId);
+            log.warn("No transcript ID found for bot: {}", botId);
             return null;
             
         } catch (Exception e) {
             log.error("Error retrieving transcript download URL for bot {}: {}", botId, e.getMessage());
             throw new RuntimeException("Failed to retrieve transcript download URL", e);
+        }
+    }
+    
+    /**
+     * Retrieves the transcript download URL using the transcript ID
+     * @param transcriptId The unique identifier of the transcript
+     * @return The transcript download URL if available, null otherwise
+     * @throws RuntimeException if the API call fails
+     */
+    private String getTranscriptDownloadUrlFromId(String transcriptId) {
+        log.info("Retrieving transcript download URL for transcript ID: {}", transcriptId);
+        
+        String apiUrl = apiBaseUrl.replace("/bot/", "/transcript/") + transcriptId + "/";
+        HttpHeaders headers = createHeaders();
+        HttpEntity<Void> requestEntity = new HttpEntity<>(headers);
+        
+        try {
+            ResponseEntity<Map<String, Object>> response = restTemplate.exchange(apiUrl, HttpMethod.GET, requestEntity, (Class<Map<String, Object>>) (Class<?>) Map.class);
+            
+            if (response.getStatusCode().is2xxSuccessful() && response.getBody() != null) {
+                Map<String, Object> transcriptData = response.getBody();
+                
+                if (transcriptData.containsKey("data")) {
+                    @SuppressWarnings("unchecked")
+                    Map<String, Object> data = (Map<String, Object>) transcriptData.get("data");
+                    
+                    if (data.containsKey("download_url")) {
+                        String downloadUrl = (String) data.get("download_url");
+                        log.info("Found transcript download URL for transcript {}: {}", transcriptId, downloadUrl);
+                        return downloadUrl;
+                    }
+                }
+                
+                log.warn("No download_url found in transcript data for ID: {}", transcriptId);
+                return null;
+            } else {
+                throw new RuntimeException("Failed to retrieve transcript data: " + response.getStatusCode());
+            }
+        } catch (Exception e) {
+            log.error("Error retrieving transcript data for ID {}: {}", transcriptId, e.getMessage());
+            throw new RuntimeException("Failed to retrieve transcript data", e);
         }
     }
     
@@ -410,7 +451,10 @@ public class RecallAiService {
         HttpEntity<Void> requestEntity = new HttpEntity<>(headers);
         
         try {
-            ResponseEntity<String> response = restTemplate.exchange(downloadUrl, HttpMethod.GET, requestEntity, String.class);
+            URI uri = UriComponentsBuilder.fromUriString(downloadUrl)
+                    .build(true)     // true = components are ALREADY encoded
+                    .toUri();
+            ResponseEntity<String> response = restTemplate.exchange(uri, HttpMethod.GET, requestEntity, String.class);
             
             if (response.getStatusCode().is2xxSuccessful() && response.getBody() != null) {
                 log.info("Successfully downloaded transcript, content length: {} characters", response.getBody().length());
