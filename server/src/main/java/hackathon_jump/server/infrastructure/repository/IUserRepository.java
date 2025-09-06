@@ -1,6 +1,6 @@
 package hackathon_jump.server.infrastructure.repository;
 
-import hackathon_jump.server.model.EOauthProvider;
+import hackathon_jump.server.model.enums.EOauthProvider;
 import hackathon_jump.server.model.domain.User;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;

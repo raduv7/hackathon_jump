@@ -2,7 +2,7 @@ package hackathon_jump.server.api.controller;
 
 import hackathon_jump.server.business.service.auth.JwtService;
 import hackathon_jump.server.business.service.auth.UserService;
-import hackathon_jump.server.model.EOauthProvider;
+import hackathon_jump.server.model.enums.EOauthProvider;
 import hackathon_jump.server.model.dto.Session;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;

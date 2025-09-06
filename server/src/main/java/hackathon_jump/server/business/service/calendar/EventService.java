@@ -4,7 +4,7 @@ import hackathon_jump.server.business.mapper.EventMapper;
 import hackathon_jump.server.business.service.external.GoogleCalendarService;
 import hackathon_jump.server.infrastructure.repository.IEventRepository;
 import hackathon_jump.server.infrastructure.repository.IUserRepository;
-import hackathon_jump.server.model.EOauthProvider;
+import hackathon_jump.server.model.enums.EOauthProvider;
 import hackathon_jump.server.model.domain.Event;
 import hackathon_jump.server.model.domain.User;
 import hackathon_jump.server.model.dto.Session;

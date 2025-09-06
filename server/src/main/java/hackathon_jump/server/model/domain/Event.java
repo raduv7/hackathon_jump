@@ -25,6 +25,9 @@ public class Event {
     private User owner;
     @Column(unique = true)
     private String googleId;
+    @OneToOne(fetch = FetchType.EAGER)
+    @JoinColumn(name = "event_report_id", referencedColumnName = "id")
+    private EventReport eventReport;
     private String title;
     private String description;
     private String creator;

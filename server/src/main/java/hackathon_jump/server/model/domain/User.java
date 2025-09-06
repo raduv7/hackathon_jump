@@ -1,6 +1,6 @@
 package hackathon_jump.server.model.domain;
 
-import hackathon_jump.server.model.EOauthProvider;
+import hackathon_jump.server.model.enums.EOauthProvider;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
