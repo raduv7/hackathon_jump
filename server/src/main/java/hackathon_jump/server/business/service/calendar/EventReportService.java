@@ -120,28 +120,4 @@ public class EventReportService {
             throw new RuntimeException("Failed to delete bot: " + botId, e);
         }
     }
-    
-    /**
-     * Determines the meeting platform based on the meeting link
-     * @param link The meeting link
-     * @return The meeting platform enum
-     */
-    private EMeetingPlatform determineMeetingPlatform(String link) {
-        if (link == null || link.isEmpty()) {
-            return null;
-        }
-        
-        String lowerLink = link.toLowerCase();
-        
-        if (lowerLink.contains("meet.google.com") || lowerLink.contains("google.com/meet")) {
-            return EMeetingPlatform.GOOGLE_MEET;
-        } else if (lowerLink.contains("zoom.us") || lowerLink.contains("zoom.com")) {
-            return EMeetingPlatform.ZOOM;
-        } else if (lowerLink.contains("teams.microsoft.com") || lowerLink.contains("teams.live.com")) {
-            return EMeetingPlatform.TEAMS;
-        } else {
-            log.warn("Unknown meeting platform for link: {}", link);
-            return null;
-        }
-    }
 }
