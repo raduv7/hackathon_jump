@@ -54,8 +54,8 @@ export class CallbackComponent implements OnInit {
         this.updateLocalStorageWithAccountDetails(params);
         this.updateLocalStorageWithToken(params);
 
-        console.log('Redirecting to settings page...');
-        setTimeout(() => this.router.navigate(['/settings']), 2000);
+        console.log('Redirecting to dashboard...');
+        setTimeout(() => this.router.navigate(['/dashboard']), 2000);
       } else {
         this.error = 'No authentication token received';
         console.error('No authentication token received in callback');
@@ -108,15 +108,34 @@ export class CallbackComponent implements OnInit {
   }
 
   private updateLocalStorageWithToken(params: Params): void {
-    let token = localStorage.getItem('token');
-    if(token == null || token.length == 0) {
+    let existingToken = localStorage.getItem('token');
+    if(existingToken == null || existingToken.length == 0) {
       localStorage.setItem('token', params['token']);
     } else {
-      localStorage.setItem('token', this.mergeTokens(token, params['token']));
+      // Merge tokens asynchronously
+      this.mergeTokens(existingToken, params['token']);
     }
   }
 
-  private mergeTokens(token1: string, token2: string) : string {
-    return '';
+  private mergeTokens(token1: string, token2: string): void {
+    // Call backend to merge tokens
+    const headers = {
+      'Authorization': `Bearer ${token1}`,
+      'Content-Type': 'application/json'
+    };
+    
+    this.http.post<string>('http://localhost:8080/auth/tokens', token2, { headers })
+      .subscribe({
+        next: (mergedToken) => {
+          console.log('Tokens merged successfully');
+          // Save the merged token to localStorage
+          localStorage.setItem('token', mergedToken);
+        },
+        error: (error) => {
+          console.error('Failed to merge tokens:', error);
+          // Keep the first token if merge fails
+          console.log('Keeping existing token due to merge failure');
+        }
+      });
   }
 }

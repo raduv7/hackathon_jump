@@ -37,6 +37,8 @@ export class AppComponent implements OnInit {
     // Subscribe to route changes
     this.router.events.subscribe(() => {
       this.checkCurrentRoute();
+      this.checkAuthentication(); // Re-check authentication on route changes
+      this.loadUserInfo(); // Re-load user info on route changes
     });
   }
 

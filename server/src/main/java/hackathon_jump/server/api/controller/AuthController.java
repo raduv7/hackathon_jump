@@ -54,6 +54,7 @@ public class AuthController {
         }
         // Get the access token from the OAuth2AuthorizedClient
         String accessToken = oAuth2AuthorizedClient.getAccessToken().getTokenValue();
+        // todo add support for refresh tokens
         String refreshToken = oAuth2AuthorizedClient.getRefreshToken() == null ? "" :
                 oAuth2AuthorizedClient.getRefreshToken().getTokenValue();
         userService.save(email, accessToken, EOauthProvider.GOOGLE);

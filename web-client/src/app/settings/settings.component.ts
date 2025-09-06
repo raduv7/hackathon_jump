@@ -35,7 +35,6 @@ export class SettingsComponent implements OnInit {
 
   ngOnInit() {
     this.loadUserInfo();
-    this.checkAuthentication();
     this.loadAccountData();
   }
 
@@ -46,13 +45,6 @@ export class SettingsComponent implements OnInit {
     this.userProvider = localStorage.getItem('user_provider') || '';
   }
 
-  private checkAuthentication() {
-    const token = localStorage.getItem('token');
-    if (!token) {
-      this.router.navigate(['/login']);
-      return;
-    }
-  }
 
   private getAuthHeaders(): HttpHeaders {
     const token = localStorage.getItem('token');
@@ -65,16 +57,8 @@ export class SettingsComponent implements OnInit {
 
   // Account management methods
   private loadAccountData() {
-    // Load Google accounts from localStorage
-    const googleAccountsData = localStorage.getItem('google_accounts');
-    if (googleAccountsData) {
-      try {
-        this.googleAccounts = JSON.parse(googleAccountsData);
-      } catch (error) {
-        console.error('Error parsing Google accounts data:', error);
-        this.googleAccounts = [];
-      }
-    }
+    // Load Google accounts from localStorage using googleEmailList and googleNameList
+    this.loadGoogleAccountsFromLists();
 
     // Load Facebook account from localStorage
     const facebookAccountData = localStorage.getItem('facebook_account');
@@ -101,27 +85,35 @@ export class SettingsComponent implements OnInit {
 
   // Google account methods
   signInWithGoogle() {
-    // TODO: Implement Google OAuth flow
-    console.log('Sign in with Google clicked');
-    // For now, add a mock account for demonstration
-    const mockGoogleAccount = {
-      id: 'google_' + Date.now(),
-      name: 'John Doe',
-      email: 'john.doe@gmail.com',
-      picture: 'https://via.placeholder.com/40x40/4285F4/FFFFFF?text=JD'
-    };
-    this.googleAccounts.push(mockGoogleAccount);
-    this.saveGoogleAccounts();
+    // Redirect to Google OAuth flow
+    window.location.href = 'http://localhost:8080/auth/oauth2/google';
   }
 
-  removeGoogleAccount(account: any) {
-    this.googleAccounts = this.googleAccounts.filter(acc => acc.id !== account.id);
-    this.saveGoogleAccounts();
+
+  private loadGoogleAccountsFromLists() {
+    const googleEmailList = localStorage.getItem('googleEmailList');
+    const googleNameList = localStorage.getItem('googleNameList');
+    
+    this.googleAccounts = [];
+    
+    if (googleEmailList && googleNameList) {
+      const emails = googleEmailList.split(',').filter(email => email.trim() !== '');
+      const names = googleNameList.split(',').filter(name => name.trim() !== '');
+      
+      // Ensure both lists have the same length
+      const minLength = Math.min(emails.length, names.length);
+      
+      for (let i = 0; i < minLength; i++) {
+        this.googleAccounts.push({
+          id: `google_${i}`,
+          name: names[i].trim(),
+          email: emails[i].trim(),
+          picture: null // No profile picture available, will use Google logo
+        });
+      }
+    }
   }
 
-  private saveGoogleAccounts() {
-    localStorage.setItem('google_accounts', JSON.stringify(this.googleAccounts));
-  }
 
   // Facebook account methods
   signInWithFacebook() {
@@ -135,11 +127,6 @@ export class SettingsComponent implements OnInit {
       picture: 'https://via.placeholder.com/40x40/1877F2/FFFFFF?text=JS'
     };
     this.saveFacebookAccount();
-  }
-
-  removeFacebookAccount() {
-    this.facebookAccount = null;
-    localStorage.removeItem('facebook_account');
   }
 
   private saveFacebookAccount() {
@@ -160,11 +147,6 @@ export class SettingsComponent implements OnInit {
       picture: 'https://via.placeholder.com/40x40/0077B5/FFFFFF?text=BJ'
     };
     this.saveLinkedInAccount();
-  }
-
-  removeLinkedInAccount() {
-    this.linkedinAccount = null;
-    localStorage.removeItem('linkedin_account');
   }
 
   private saveLinkedInAccount() {

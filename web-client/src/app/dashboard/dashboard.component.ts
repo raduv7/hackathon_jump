@@ -37,9 +37,6 @@ export class DashboardComponent implements OnInit {
   autoRefresh: boolean = false;
   notifications: boolean = true;
   
-  showLogoutDialog: boolean = false;
-  isLoggingOut: boolean = false;
-  
   private refreshInterval: any;
 
   constructor(
@@ -49,7 +46,6 @@ export class DashboardComponent implements OnInit {
 
   ngOnInit() {
     this.loadUserInfo();
-    this.checkAuthentication();
   }
 
   ngOnDestroy() {
@@ -65,13 +61,6 @@ export class DashboardComponent implements OnInit {
     this.userProvider = localStorage.getItem('user_provider') || '';
   }
 
-  private checkAuthentication() {
-    const token = localStorage.getItem('token');
-    if (!token) {
-      this.router.navigate(['/login']);
-      return;
-    }
-  }
 
   private getAuthHeaders(): HttpHeaders {
     const token = localStorage.getItem('token');
@@ -134,57 +123,5 @@ export class DashboardComponent implements OnInit {
 
   goToAccounts() {
     this.router.navigate(['/accounts']);
-  }
-
-  confirmLogout() {
-    this.showLogoutDialog = true;
-  }
-
-  cancelLogout() {
-    this.showLogoutDialog = false;
-  }
-
-  logout() {
-    this.isLoggingOut = true;
-    const token = localStorage.getItem('token');
-    
-    if (token) {
-      // Call sign_out API
-      const headers = this.getAuthHeaders();
-      this.http.post(`${API_BASE_URL}/auth/sign_out`, {}, { headers })
-        .subscribe({
-          next: () => {
-            this.performLogout();
-          },
-          error: (error) => {
-            console.error('Error signing out:', error);
-            // Still perform logout even if API call fails
-            this.performLogout();
-          }
-        });
-    } else {
-      this.performLogout();
-    }
-  }
-
-  private performLogout() {
-    // Clear all stored data
-    localStorage.removeItem('token');
-    localStorage.removeItem('user_email');
-    localStorage.removeItem('user_name');
-    localStorage.removeItem('user_picture');
-    localStorage.removeItem('user_provider');
-    
-    // Stop any running intervals
-    if (this.refreshInterval) {
-      clearInterval(this.refreshInterval);
-    }
-    
-    // Close dialog
-    this.showLogoutDialog = false;
-    this.isLoggingOut = false;
-    
-    // Redirect to empty path (root)
-    this.router.navigate(['/']);
   }
 }

@@ -1,6 +1,6 @@
-import { Component } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { RouterLink } from '@angular/router';
+import { RouterLink, ActivatedRoute, Router } from '@angular/router';
 import { API_BASE_URL } from '../security.config';
 
 @Component({
@@ -10,6 +10,24 @@ import { API_BASE_URL } from '../security.config';
   templateUrl: './login.component.html',
   styleUrls: ['./login.component.scss']
 })
-export class LoginComponent {
+export class LoginComponent implements OnInit {
   googleAuthUrl = `${API_BASE_URL}/auth/oauth2/google`;
+  returnUrl: string = '/dashboard';
+
+  constructor(
+    private route: ActivatedRoute,
+    private router: Router
+  ) {}
+
+  ngOnInit() {
+    // Check if user is already authenticated
+    const token = localStorage.getItem('token');
+    if (token) {
+      this.router.navigate(['/dashboard']);
+      return;
+    }
+
+    // Get return URL from route parameters or default to '/dashboard'
+    this.returnUrl = this.route.snapshot.queryParams['returnUrl'] || '/dashboard';
+  }
 }

@@ -6,7 +6,7 @@ import { SettingsComponent } from './settings/settings.component';
 import { AuthGuard } from './auth/auth.guard';
 
 export const routes: Routes = [
-  { path: '', pathMatch: 'full', redirectTo: 'login' },
+  { path: '', pathMatch: 'full', redirectTo: 'settings' },
   { path: 'login', component: LoginComponent },
   { path: 'auth/oauth2/callback', component: CallbackComponent },
   { path: 'dashboard', component: DashboardComponent, canActivate: [AuthGuard] },
