@@ -29,14 +29,25 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             @NonNull HttpServletResponse response,
             @NonNull FilterChain filterChain
     ) throws ServletException, IOException {
-        
         log.debug("JWT Authentication filter processing request: {}", request.getRequestURI());
+
+        String requestUri = request.getRequestURI();
+        if(requestUri.startsWith("/auth") ||
+            requestUri.startsWith("/login") ||
+            requestUri.startsWith("/api/public")) {
+            filterChain.doFilter(request, response);
+            return;
+        }
+
         
         final String authHeader = request.getHeader("Authorization");
         final String jwt;
         
         if (authHeader == null || !authHeader.startsWith("Bearer ")) {
-            filterChain.doFilter(request, response);
+            logger.info("Invalid JWT token!");
+            response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+            response.getWriter().write("{\"error\":\"Unauthorized\",\"message\":\"Missing or invalid Authorization header\"}");
+            response.setContentType("application/json");
             return;
         }
         
@@ -45,6 +56,8 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             Session session = jwtService.validateAndGetSession(jwt);
             logger.debug("translated jwt into session: " + session);
             request.setAttribute("session", session);
+
+            filterChain.doFilter(request, response);
 
 //            String userEmail = jwtService.validateAndGetSubject(jwt);
 //            if (userEmail != null && SecurityContextHolder.getContext().getAuthentication() == null) {
@@ -63,10 +76,12 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 //                SecurityContextHolder.getContext().setAuthentication(authToken);
 //            }
         } catch (Exception e) {
-            // Token is invalid, continue without authentication
+            // Token is invalid, send 401 response
             logger.debug("Invalid JWT token: " + e.getMessage());
+            response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+            response.getWriter().write("{\"error\":\"Unauthorized\",\"message\":\"Invalid JWT token\"}");
+            response.setContentType("application/json");
+            return;
         }
-        
-        filterChain.doFilter(request, response);
     }
 }
