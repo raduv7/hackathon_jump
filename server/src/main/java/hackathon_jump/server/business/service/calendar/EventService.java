@@ -1,6 +1,7 @@
 package hackathon_jump.server.business.service.calendar;
 
 import hackathon_jump.server.business.mapper.EventMapper;
+import hackathon_jump.server.business.service.external.GoogleCalendarService;
 import hackathon_jump.server.infrastructure.repository.IEventRepository;
 import hackathon_jump.server.infrastructure.repository.IUserRepository;
 import hackathon_jump.server.model.EOauthProvider;

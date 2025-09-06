@@ -1,4 +1,4 @@
-package hackathon_jump.server.business.service.calendar;
+package hackathon_jump.server.business.service.external;
 
 import com.google.api.client.auth.oauth2.Credential;
 import com.google.api.client.googleapis.auth.oauth2.GoogleCredential;
@@ -15,9 +15,11 @@ import org.springframework.stereotype.Service;
 
 import java.io.IOException;
 import java.security.GeneralSecurityException;
+import java.time.Instant;
+import java.time.ZoneOffset;
+import java.time.format.DateTimeFormatter;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 
 @Service
@@ -51,10 +53,14 @@ public class GoogleCalendarService {
 
         // Fetch events from each calendar
         for (CalendarListEntry calendar : calendars) {
+            // Get current time in RFC3339 format for Google Calendar API
+            String currentTime = Instant.now().atOffset(ZoneOffset.UTC).format(DateTimeFormatter.ISO_INSTANT);
+            
             Events events = service.events()
                     .list(calendar.getId())
                     .setOrderBy("startTime")
                     .setSingleEvents(true)
+                    .setTimeMin(new com.google.api.client.util.DateTime(currentTime))
                     .execute();
 
             List<Event> googleEvents = events.getItems();
@@ -64,7 +70,7 @@ public class GoogleCalendarService {
             }
         }
 
-        log.info("Retrieved {} total calendar events from {} calendars", allEvents.size(), calendars.size());
+        log.info("Retrieved {} total future calendar events from {} calendars", allEvents.size(), calendars.size());
         return allEvents;
     }
 }
