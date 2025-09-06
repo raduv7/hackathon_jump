@@ -144,35 +144,110 @@ public class RecallAiService {
     /**
      * Updates the meeting URL and scheduled time of an existing scheduled bot
      * 
-     * Note: Bot updates may not be applied if the bot has already started up.
-     * The soonest you can update a bot's join_at is 10 minutes from present.
-     * If you need to reschedule a bot to a meeting that starts in less than 10 minutes,
-     * you should delete this scheduled bot and create a new (ad-hoc) bot.
+     * This method implements a delete-and-recreate strategy:
+     * 1. Retrieves the current bot details
+     * 2. Deletes the existing bot
+     * 3. Creates a new bot with updated parameters
+     * 4. Returns the new bot ID
      * 
-     * Rate limited to: 300 requests per min per workspace
+     * This approach is more reliable than PATCH updates and ensures the bot
+     * is properly configured with the new parameters.
      * 
      * @param botId The unique identifier of the bot to update
      * @param newMeetingUrl The new meeting URL
      * @param newJoinAt The new scheduled join time (ISO 8601 format, must be at least 10 minutes in the future)
-     * @throws RuntimeException if the API call fails
-     * @see <a href="https://docs.recall.ai/reference/bot_partial_update">Recall AI Update Scheduled Bot Documentation</a>
+     * @return The ID of the newly created bot
+     * @throws RuntimeException if any API call fails
      */
-    public void updateScheduledBot(String botId, String newMeetingUrl, String newJoinAt) {
+    public String updateScheduledBot(String botId, String newMeetingUrl, String newJoinAt) {
         log.info("Updating scheduled bot {} with new meeting URL: {} and join time: {}", botId, newMeetingUrl, newJoinAt);
-        log.warn("Note: Bot updates may not be applied if the bot has already started. Ensure join_at is at least 10 minutes in the future.");
-        
-        String apiUrl = apiBaseUrl + botId + "/";
-        HttpHeaders headers = createHeaders();
-        HttpEntity<Map<String, Object>> requestEntity = createRequestEntity(newMeetingUrl, newJoinAt, headers);
+        log.info("Using delete-and-recreate strategy for bot update");
         
         try {
-            ResponseEntity<Map<String, Object>> response = restTemplate.exchange(apiUrl, HttpMethod.PATCH, requestEntity, (Class<Map<String, Object>>) (Class<?>) Map.class);
+            // Step 1: Retrieve current bot details to preserve configuration
+            log.info("Step 1: Retrieving current bot details for bot: {}", botId);
+            Map<String, Object> currentBotDetails = retrieveBot(botId);
             
-            if (response.getStatusCode().is2xxSuccessful()) {
-                log.info("Successfully updated bot with ID: {}", botId);
-            } else {
-                throw new RuntimeException("Failed to update scheduled bot: " + response.getStatusCode());
+            if (currentBotDetails == null) {
+                throw new RuntimeException("Bot not found: " + botId);
             }
+            
+            // Extract transcript configuration from current bot if it exists
+            String transcriptProvider = null;
+            String webhookUrl = null;
+            
+            if (currentBotDetails.containsKey("recording_config")) {
+                @SuppressWarnings("unchecked")
+                Map<String, Object> recordingConfig = (Map<String, Object>) currentBotDetails.get("recording_config");
+                
+                if (recordingConfig.containsKey("transcript")) {
+                    @SuppressWarnings("unchecked")
+                    Map<String, Object> transcript = (Map<String, Object>) recordingConfig.get("transcript");
+                    
+                    if (transcript.containsKey("provider")) {
+                        @SuppressWarnings("unchecked")
+                        Map<String, Object> provider = (Map<String, Object>) transcript.get("provider");
+                        
+                        // Find the transcript provider (could be assembly_ai_streaming, deepgram, etc.)
+                        for (String key : provider.keySet()) {
+                            if (!key.equals("provider")) {
+                                transcriptProvider = key;
+                                break;
+                            }
+                        }
+                    }
+                }
+                
+                // Extract webhook URL if it exists
+                if (recordingConfig.containsKey("realtime_endpoints")) {
+                    @SuppressWarnings("unchecked")
+                    java.util.List<Map<String, Object>> endpoints = (java.util.List<Map<String, Object>>) recordingConfig.get("realtime_endpoints");
+                    
+                    for (Map<String, Object> endpoint : endpoints) {
+                        if ("webhook".equals(endpoint.get("type"))) {
+                            webhookUrl = (String) endpoint.get("url");
+                            break;
+                        }
+                    }
+                }
+            }
+            
+            log.info("Extracted configuration - Transcript provider: {}, Webhook URL: {}", 
+                    transcriptProvider != null ? transcriptProvider : "none", 
+                    webhookUrl != null ? webhookUrl : "none");
+            
+            // Step 2: Delete the existing bot
+            log.info("Step 2: Deleting existing bot: {}", botId);
+            deleteScheduledBot(botId);
+            log.info("Successfully deleted bot: {}", botId);
+            
+            // Step 3: Create new bot with updated parameters
+            log.info("Step 3: Creating new bot with updated parameters");
+            String newBotId;
+            
+            if (transcriptProvider != null) {
+                // Create bot with transcript configuration
+                newBotId = createBot(newMeetingUrl, newJoinAt, transcriptProvider, webhookUrl);
+            } else {
+                // Create bot with default transcript configuration
+                newBotId = createBot(newMeetingUrl, newJoinAt);
+            }
+            
+            log.info("Successfully created new bot with ID: {}", newBotId);
+            
+            // Step 4: Verify the new bot was created correctly
+            log.info("Step 4: Verifying new bot configuration");
+            Map<String, Object> newBotDetails = retrieveBot(newBotId);
+            
+            if (newBotDetails != null) {
+                log.info("New bot verification successful. Bot details: {}", newBotDetails);
+            } else {
+                log.warn("Warning: Could not retrieve details for newly created bot: {}", newBotId);
+            }
+            
+            log.info("Bot update completed successfully. Old bot ID: {}, New bot ID: {}", botId, newBotId);
+            return newBotId;
+            
         } catch (Exception e) {
             log.error("Error updating bot {}: {}", botId, e.getMessage());
             throw new RuntimeException("Failed to update scheduled bot", e);
@@ -184,8 +259,9 @@ public class RecallAiService {
      */
     private HttpHeaders createHeaders() {
         HttpHeaders headers = new HttpHeaders();
-        headers.set("Authorization", "Bearer " + apiKey);
+        headers.set("Authorization", apiKey); // Use API key directly without "Bearer " prefix
         headers.setContentType(MediaType.APPLICATION_JSON);
+        headers.set("accept", "application/json");
         return headers;
     }
     
@@ -195,7 +271,23 @@ public class RecallAiService {
     private HttpEntity<Map<String, Object>> createRequestEntity(String meetingUrl, String joinAt, HttpHeaders headers) {
         Map<String, Object> requestBody = new HashMap<>();
         requestBody.put("meeting_url", meetingUrl);
-        requestBody.put("join_at", joinAt);
+        requestBody.put("bot_name", "meetScribe_bot"); // Add bot name like in the working template
+        
+        // Add join_at only if specified (for scheduled bots)
+        if (joinAt != null && !joinAt.isEmpty()) {
+            requestBody.put("join_at", joinAt);
+        }
+        
+        // Add output_media configuration like in the working template
+        Map<String, Object> outputMedia = new HashMap<>();
+        Map<String, Object> camera = new HashMap<>();
+        camera.put("kind", "webpage");
+        Map<String, Object> config = new HashMap<>();
+        config.put("url", "https://www.google.com/url?sa=i&url=https%3A%2F%2Fwww.pngwing.com%2Fen%2Fsearch%3Fq%3Dbot&psig=AOvVaw1HTRdqwhdtwCCjMUV-j2sh&ust=1757274417142000&source=images&cd=vfe&opi=89978449&ved=0CBIQjRxqFwoTCNja9rzzxI8DFQAAAAAdAAAAABAE");
+        camera.put("config", config);
+        outputMedia.put("camera", camera);
+        requestBody.put("output_media", outputMedia);
+        
         return new HttpEntity<>(requestBody, headers);
     }
     
@@ -206,7 +298,22 @@ public class RecallAiService {
                                                                               String transcriptProvider, String webhookUrl, HttpHeaders headers) {
         Map<String, Object> requestBody = new HashMap<>();
         requestBody.put("meeting_url", meetingUrl);
-        requestBody.put("join_at", joinAt);
+        requestBody.put("bot_name", "meetScribe_bot"); // Add bot name like in the working template
+        
+        // Add join_at only if specified (for scheduled bots)
+        if (joinAt != null && !joinAt.isEmpty()) {
+            requestBody.put("join_at", joinAt);
+        }
+        
+        // Add output_media configuration like in the working template
+        Map<String, Object> outputMedia = new HashMap<>();
+        Map<String, Object> camera = new HashMap<>();
+        camera.put("kind", "webpage");
+        Map<String, Object> config = new HashMap<>();
+        config.put("url", "https://www.google.com/url?sa=i&url=https%3A%2F%2Fwww.pngwing.com%2Fen%2Fsearch%3Fq%3Dbot&psig=AOvVaw1HTRdqwhdtwCCjMUV-j2sh&ust=1757274417142000&source=images&cd=vfe&opi=89978449&ved=0CBIQjRxqFwoTCNja9rzzxI8DFQAAAAAdAAAAABAE");
+        camera.put("config", config);
+        outputMedia.put("camera", camera);
+        requestBody.put("output_media", outputMedia);
         
         // Add transcript configuration if provider is specified
         if (transcriptProvider != null && !transcriptProvider.isEmpty()) {
@@ -297,7 +404,9 @@ public class RecallAiService {
     public String downloadTranscript(String downloadUrl) {
         log.info("Downloading transcript from URL: {}", downloadUrl);
         
-        HttpHeaders headers = createHeaders();
+        // For S3 downloads, don't use our API key - the URL already contains authentication
+        HttpHeaders headers = new HttpHeaders();
+        headers.set("Accept", "application/json");
         HttpEntity<Void> requestEntity = new HttpEntity<>(headers);
         
         try {
