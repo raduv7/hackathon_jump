@@ -60,13 +60,28 @@ export class SettingsComponent implements OnInit {
     // Load Google accounts from localStorage using googleEmailList and googleNameList
     this.loadGoogleAccountsFromLists();
 
-    // Load Facebook account from localStorage
-    const facebookAccountData = localStorage.getItem('facebook_account');
-    if (facebookAccountData) {
-      try {
-        this.facebookAccount = JSON.parse(facebookAccountData);
-      } catch (error) {
-        console.error('Error parsing Facebook account data:', error);
+    // Load Facebook account from localStorage - check for facebookUsername
+    const facebookUsername = localStorage.getItem('facebookUsername');
+    
+    if (facebookUsername) {
+      this.facebookAccount = {
+        id: 'facebook_' + Date.now(),
+        username: facebookUsername,
+        name: facebookUsername, // Use username as display name
+        email: null, // Facebook doesn't provide email in this flow
+        picture: null // Will use Facebook logo instead
+      };
+    } else {
+      // Fallback to old facebook_account format if it exists
+      const facebookAccountData = localStorage.getItem('facebook_account');
+      if (facebookAccountData) {
+        try {
+          this.facebookAccount = JSON.parse(facebookAccountData);
+        } catch (error) {
+          console.error('Error parsing Facebook account data:', error);
+          this.facebookAccount = null;
+        }
+      } else {
         this.facebookAccount = null;
       }
     }
@@ -130,16 +145,8 @@ export class SettingsComponent implements OnInit {
 
   // Facebook account methods
   signInWithFacebook() {
-    // TODO: Implement Facebook OAuth flow
-    console.log('Sign in with Facebook clicked');
-    // For now, add a mock account for demonstration
-    this.facebookAccount = {
-      id: 'facebook_' + Date.now(),
-      name: 'Jane Smith',
-      email: 'jane.smith@facebook.com',
-      picture: 'https://via.placeholder.com/40x40/1877F2/FFFFFF?text=JS'
-    };
-    this.saveFacebookAccount();
+    // Redirect to Facebook OAuth flow
+    window.location.href = `${API_BASE_URL}/oauth2/authorization/facebook`;
   }
 
   private saveFacebookAccount() {

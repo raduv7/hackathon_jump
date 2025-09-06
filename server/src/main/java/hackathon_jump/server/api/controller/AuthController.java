@@ -77,18 +77,14 @@ public class AuthController {
             HttpServletResponse response
     ) throws IOException {
         log.debug("LinkedIn OAuth callback for user: {}", oauth2User.getName());
-        log.debug("LinkedIn OAuth attributes: {}", oauth2User.getAttributes());
 
-        // LinkedIn provides different attribute names
         String email = oauth2User.getAttribute("emailAddress");
         if (email == null) {
             email = oauth2User.getAttribute("email");
         }
-        
         String firstName = oauth2User.getAttribute("firstName");
         String lastName = oauth2User.getAttribute("lastName");
         String name = "";
-        
         if (firstName != null && lastName != null) {
             name = firstName + " " + lastName;
         } else if (firstName != null) {
@@ -111,13 +107,60 @@ public class AuthController {
         userService.save(email, accessToken, EOauthProvider.LINKEDIN);
 
         Map<String, Object> claims = Map.of(
-                "linkedinEmailAddresses", List.of(email)
+                "linkedinUsername", List.of(email)
         );
         String jwt = jwtService.issue(email, claims);
 
         String redirectUrl = String.format(
                 "http://localhost:4200/auth/oauth2/callback?token=%s&username=%s&name=%s&provider=%s",
                 jwt, email, name, EOauthProvider.LINKEDIN
+        );
+        response.sendRedirect(redirectUrl);
+    }
+
+    @GetMapping("/oauth2/facebook/callback")
+    public void handleFacebookCallback(
+            @AuthenticationPrincipal OAuth2User oauth2User,
+            @RegisteredOAuth2AuthorizedClient("facebook") OAuth2AuthorizedClient oAuth2AuthorizedClient,
+            HttpServletRequest request,
+            HttpServletResponse response
+    ) throws IOException {
+        log.debug("facebook OAuth callback for user: {}", oauth2User.getName());
+
+        // Facebook provides different attribute names
+        String email = oauth2User.getAttribute("email");
+        String name = oauth2User.getAttribute("name");
+        String username = oauth2User.getAttribute("username");
+        
+        // If no username, use email as username
+        if (username == null || username.isEmpty()) {
+            username = email;
+        }
+        
+        // If no name, use username or email
+        if (name == null || name.isEmpty()) {
+            name = username != null ? username : email;
+        }
+
+        if (email == null || email.isEmpty()) {
+            response.sendRedirect("http://localhost:4200/auth/oauth2/callback?error=invalid_user");
+            return;
+        }
+
+        String accessToken = oAuth2AuthorizedClient.getAccessToken().getTokenValue();
+        String refreshToken = oAuth2AuthorizedClient.getRefreshToken() == null ? "" :
+                oAuth2AuthorizedClient.getRefreshToken().getTokenValue();
+
+        userService.save(email, accessToken, EOauthProvider.FACEBOOK);
+
+        Map<String, Object> claims = Map.of(
+                "facebookUsername", List.of(email)
+        );
+        String jwt = jwtService.issue(email, claims);
+
+        String redirectUrl = String.format(
+                "http://localhost:4200/auth/oauth2/callback?token=%s&username=%s&name=%s&provider=%s",
+                jwt, email, name, EOauthProvider.FACEBOOK
         );
         response.sendRedirect(redirectUrl);
     }
