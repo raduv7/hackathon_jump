@@ -20,6 +20,9 @@ public class Event {
     @Id
     @GeneratedValue
     private Long id;
+    @ManyToOne(fetch = FetchType.EAGER)
+    @JoinColumn(name = "owner_id", referencedColumnName = "id")
+    private User owner;
     @Column(unique = true)
     private String googleId;
     private String title;

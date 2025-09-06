@@ -13,6 +13,7 @@ import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 
 @Service
@@ -65,5 +66,15 @@ public class EventService {
         }
 
         return savedEvents;
+    }
+
+    public void setShouldSendBot(Session session, Long eventId, Boolean shouldSendBot) {
+        Event event = eventRepository.findById(eventId).orElseThrow();
+        if(session.getGoogleEmailAddresses().stream()
+                .noneMatch(emailAddress -> Objects.equals(event.getOwner().getUsername(), emailAddress))) {
+            throw new IllegalArgumentException("no rights on this eventId");
+        }
+        event.setShouldSendBot(shouldSendBot);
+        eventRepository.save(event);
     }
 }
