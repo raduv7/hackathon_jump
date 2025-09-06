@@ -1,0 +1,80 @@
+<div class="dashboard-container">
+
+  <main class="dashboard-main">
+    <div class="dashboard-grid">
+      <!-- Welcome Card -->
+      <div class="dashboard-card welcome-card">
+        <h2>Welcome back!</h2>
+        <p>You're successfully logged in via {{ userProvider }}.</p>
+        <div class="status-indicator">
+          <span class="status-dot"></span>
+          <span>Connected</span>
+        </div>
+      </div>
+
+      <!-- Calendar Card -->
+      <div class="dashboard-card calendar-card">
+        <h3>Calendar Integration</h3>
+        <p>Your Google Calendar is connected and ready to use.</p>
+        <button class="action-btn primary" (click)="loadCalendarEvents()">
+          Load Calendar Events
+        </button>
+      </div>
+
+      <!-- Events Card -->
+      <div class="dashboard-card events-card">
+        <h3>Recent Events</h3>
+        <div class="events-list" *ngIf="events.length > 0; else noEvents">
+          <div class="event-item" *ngFor="let event of events">
+            <div class="event-time">{{ formatEventTime(event.start) }}</div>
+            <div class="event-title">{{ event.summary }}</div>
+            <div class="event-location" *ngIf="event.location">{{ event.location }}</div>
+          </div>
+        </div>
+        <ng-template #noEvents>
+          <p class="no-events">No events found. Click "Load Calendar Events" to fetch your calendar data.</p>
+        </ng-template>
+      </div>
+
+      <!-- Settings Card -->
+      <div class="dashboard-card settings-card">
+        <h3>Settings</h3>
+        <div class="settings-list">
+          <div class="setting-item">
+            <label>Auto-refresh calendar</label>
+            <input type="checkbox" [(ngModel)]="autoRefresh" (change)="toggleAutoRefresh()">
+          </div>
+          <div class="setting-item">
+            <label>Notifications</label>
+            <input type="checkbox" [(ngModel)]="notifications" (change)="toggleNotifications()">
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <!-- Logout Confirmation Dialog -->
+  <div class="modal-overlay" *ngIf="showLogoutDialog" (click)="cancelLogout()">
+    <div class="modal-dialog" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <h3>Confirm Logout</h3>
+        <button class="close-btn" (click)="cancelLogout()">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <line x1="18" y1="6" x2="6" y2="18"></line>
+            <line x1="6" y1="6" x2="18" y2="18"></line>
+          </svg>
+        </button>
+      </div>
+      <div class="modal-body">
+        <p>Are you sure you want to logout? This will disconnect you from all accounts.</p>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" (click)="cancelLogout()">Cancel</button>
+        <button class="btn btn-danger" (click)="logout()" [disabled]="isLoggingOut">
+          <span *ngIf="!isLoggingOut">Logout</span>
+          <span *ngIf="isLoggingOut">Logging out...</span>
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
