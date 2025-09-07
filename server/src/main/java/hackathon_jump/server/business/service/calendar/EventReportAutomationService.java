@@ -5,7 +5,6 @@ import hackathon_jump.server.infrastructure.repository.IEventReportAutomationRep
 import hackathon_jump.server.model.domain.Automation;
 import hackathon_jump.server.model.domain.EventReport;
 import hackathon_jump.server.model.domain.EventReportAutomation;
-import hackathon_jump.server.model.enums.EMediaPlatform;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -28,13 +27,12 @@ public class EventReportAutomationService {
      * Get EventReportAutomation by automation and event report.
      * If not present, creates a new one using ChatGPT service.
      */
-    @Transactional
     public EventReportAutomation getByAutomationAndEventReport(Automation automation, EventReport eventReport) {
         log.info("Getting EventReportAutomation for automation ID: {} and event report ID: {}", 
                 automation.getId(), eventReport.getId());
         
-        Optional<EventReportAutomation> existing = eventReportAutomationRepository
-                .findByAutomationAndEventReport(automation, eventReport);
+        // First, check if it exists in a separate transaction
+        Optional<EventReportAutomation> existing = findExistingEventReportAutomation(automation, eventReport);
         
         if (existing.isPresent()) {
             log.info("Found existing EventReportAutomation with ID: {}", existing.get().getId());
@@ -44,82 +42,77 @@ public class EventReportAutomationService {
         log.info("No existing EventReportAutomation found, creating new one with ChatGPT");
         return createNewEventReportAutomation(automation, eventReport);
     }
+    
+    /**
+     * Find existing EventReportAutomation in a separate, short transaction
+     */
+    @Transactional(readOnly = true)
+    public Optional<EventReportAutomation> findExistingEventReportAutomation(Automation automation, EventReport eventReport) {
+        return eventReportAutomationRepository.findByAutomationAndEventReport(automation, eventReport);
+    }
 
     private EventReportAutomation createNewEventReportAutomation(Automation automation, EventReport eventReport) {
+        // Generate content outside of transaction to avoid long-running database locks
         EventReportAutomation newEventReportAutomation = chatGptService.generateEventReportAutomation(eventReport, automation);
-
-        EventReportAutomation saved = eventReportAutomationRepository.save(newEventReportAutomation);
+        
+        // Save in a separate, short transaction
+        return saveEventReportAutomation(newEventReportAutomation);
+    }
+    
+    /**
+     * Save EventReportAutomation in a separate, short transaction
+     */
+    @Transactional
+    public EventReportAutomation saveEventReportAutomation(EventReportAutomation eventReportAutomation) {
+        EventReportAutomation saved = eventReportAutomationRepository.save(eventReportAutomation);
         log.info("Created new EventReportAutomation with ID: {}, title: '{}', text length: {}", 
-                saved.getId(), newEventReportAutomation.getTitle(), newEventReportAutomation.getText().length());
+                saved.getId(), eventReportAutomation.getTitle(), 
+                eventReportAutomation.getText() != null ? eventReportAutomation.getText().length() : 0);
         
         return saved;
     }
 
-    private String generateTitleForText(String text) {
-        if (text == null || text.trim().isEmpty()) {
-            log.warn("Cannot generate title: text is empty");
-            return "Untitled";
-        }
-        
-        String prompt = String.format(
-            "Based on the following content, generate a concise and engaging title (maximum 10 words):\n\n%s\n\n" +
-            "Please provide only the title, no additional text or formatting.",
-            text
-        );
-        
-        String title = chatGptService.getChatGptResponse(prompt);
-        if (title == null || title.trim().isEmpty()) {
-            log.warn("ChatGPT returned empty title, using fallback");
-            return "Generated Content";
-        }
-        
-        // Clean up the title (remove quotes, extra whitespace, etc.)
-        title = title.trim().replaceAll("^[\"']|[\"']$", "").trim();
-        
-        log.info("Generated title: '{}'", title);
-        return title;
-    }
-    
-    /**
-     * Generate generic text when platform is not recognized
-     */
-    private String generateGenericText(EventReport eventReport) {
-        return String.format(
-            "Meeting Summary for %s\n\n" +
-            "Date: %s\n" +
-            "Attendees: %s\n" +
-            "Platform: %s\n\n" +
-            "Key Points:\n" +
-            "Based on the meeting transcript, here are the main discussion points and outcomes.",
-            eventReport.getEvent() != null ? eventReport.getEvent().getTitle() : "Unknown Event",
-            eventReport.getStartDateTime(),
-            eventReport.getAttendees(),
-            eventReport.getPlatform()
-        );
-    }
-
-    @Transactional
     public EventReportAutomation refresh(Long id) {
         log.info("Refreshing EventReportAutomation with ID: {}", id);
         
+        // Get existing record in a separate transaction
+        EventReportAutomation existing = getEventReportAutomationById(id);
+        Automation automation = existing.getAutomation();
+        EventReport eventReport = existing.getEventReport();
+
+        // Generate new content outside of transaction
+        EventReportAutomation newEventReportAutomation = chatGptService.generateEventReportAutomation(eventReport, automation);
+        
+        // Update the existing record with new content
+        existing.setText(newEventReportAutomation.getText());
+        existing.setTitle(newEventReportAutomation.getTitle());
+        
+        // Save in a separate, short transaction
+        return updateEventReportAutomation(existing);
+    }
+    
+    /**
+     * Get EventReportAutomation by ID in a separate transaction
+     */
+    @Transactional(readOnly = true)
+    public EventReportAutomation getEventReportAutomationById(Long id) {
         Optional<EventReportAutomation> existing = eventReportAutomationRepository.findById(id);
         if (existing.isEmpty()) {
             log.error("EventReportAutomation not found with ID: {}", id);
             throw new RuntimeException("EventReportAutomation not found with ID: " + id);
         }
-        
-        EventReportAutomation eventReportAutomation = existing.get();
-        Automation automation = eventReportAutomation.getAutomation();
-        EventReport eventReport = eventReportAutomation.getEventReport();
-
-        EventReportAutomation newEventReportAutomation = chatGptService.generateEventReportAutomation(eventReport, automation);
-        
-        eventReportAutomation.setText(newEventReportAutomation.getText());
-        eventReportAutomation.setTitle(newEventReportAutomation.getTitle());
-        
+        return existing.get();
+    }
+    
+    /**
+     * Update EventReportAutomation in a separate, short transaction
+     */
+    @Transactional
+    public EventReportAutomation updateEventReportAutomation(EventReportAutomation eventReportAutomation) {
         EventReportAutomation updated = eventReportAutomationRepository.save(eventReportAutomation);
         log.info("Refreshed EventReportAutomation with ID: {}, new title: '{}', new text length: {}", 
-                updated.getId(), newEventReportAutomation.getText(), newEventReportAutomation.getTitle().length());
+                updated.getId(), updated.getTitle(), 
+                updated.getText() != null ? updated.getText().length() : 0);
         
         return updated;
     }
@@ -159,6 +152,7 @@ public class EventReportAutomationService {
         log.info("Deleted {} EventReportAutomation records for event report ID: {}", count, eventReportId);
     }
 
+    @Transactional(readOnly = true)
     public List<EventReportAutomation> getByAutomation(Automation automation) {
         log.info("Getting all EventReportAutomation for automation ID: {}", automation.getId());
         return eventReportAutomationRepository.findByAutomation(automation);
@@ -167,6 +161,7 @@ public class EventReportAutomationService {
     /**
      * Get all EventReportAutomation by event report
      */
+    @Transactional(readOnly = true)
     public List<EventReportAutomation> getByEventReport(EventReport eventReport) {
         log.info("Getting all EventReportAutomation for event report ID: {}", eventReport.getId());
         return eventReportAutomationRepository.findByEventReport(eventReport);
@@ -175,6 +170,7 @@ public class EventReportAutomationService {
     /**
      * Get EventReportAutomation by ID
      */
+    @Transactional(readOnly = true)
     public Optional<EventReportAutomation> getById(Long id) {
         log.info("Getting EventReportAutomation with ID: {}", id);
         return eventReportAutomationRepository.findById(id);

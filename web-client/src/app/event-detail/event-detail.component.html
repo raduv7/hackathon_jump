@@ -38,8 +38,8 @@
         <div class="event-details-grid">
           <div class="detail-item">
             <div class="platform-logo-container" *ngIf="getPlatformLogo(eventDetail.platform)">
-              <img [src]="getPlatformLogo(eventDetail.platform)" 
-                   [alt]="eventDetail.platform" 
+              <img [src]="getPlatformLogo(eventDetail.platform)"
+                   [alt]="eventDetail.platform"
                    class="platform-logo">
             </div>
           </div>
@@ -50,12 +50,12 @@
               <div class="time-text">{{ formatDateTime(eventDetail.startDateTime) }}</div>
             </div>
           </div>
-          
+
           <div class="detail-item">
             <label>Attendees</label>
             <span>{{ eventDetail.attendees }}</span>
           </div>
-          
+
           <div class="detail-item" *ngIf="eventDetail.event.description">
             <label>Description</label>
             <span>{{ eventDetail.event.description }}</span>
@@ -92,9 +92,9 @@
             </svg>
             Copy
           </button>
-          <button 
-            class="linkedin-btn" 
-            (click)="postToLinkedIn()" 
+          <button
+            class="linkedin-btn"
+            (click)="postToLinkedIn()"
             [disabled]="!localStorage.getItem('linkedinUsername')"
             [class.disabled]="!localStorage.getItem('linkedinUsername')"
             title="Post to LinkedIn"
@@ -125,13 +125,13 @@
       </div>
 
       <div class="automations-list" *ngIf="automations.length > 0; else noAutomations">
-        <div 
-          *ngFor="let automation of automations" 
+        <div
+          *ngFor="let automation of automations"
           class="automation-item"
           (click)="onAutomationClick(automation)"
         >
           <div class="automation-header">
-            <h4>{{ getAutomationTypeDisplay(automation.automationType) }}</h4>
+            <h4>{{ getAutomationTypeDisplay(automation.title) }}</h4>
             <span class="platform-badge">{{ getPlatformDisplay(automation.mediaPlatform) }}</span>
           </div>
           <p class="automation-description">{{ automation.description }}</p>
@@ -154,7 +154,7 @@
   <div *ngIf="showAutomationPopup" class="modal-overlay" (click)="closeAutomationPopup()">
     <div class="modal-content" (click)="$event.stopPropagation()">
       <div class="modal-header">
-        <h2>{{ selectedAutomation?.title || 'Automation Content' }}</h2>
+        <h2>{{ selectedAutomation?.automation?.title || 'Automation Content' }}</h2>
         <button class="close-btn" (click)="closeAutomationPopup()">
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
             <line x1="18" y1="6" x2="6" y2="18"></line>
@@ -164,6 +164,25 @@
       </div>
 
       <div class="modal-body">
+        <!-- Success Message -->
+        <div *ngIf="successMessage" class="success-message">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+            <polyline points="22,4 12,14.01 9,11.01"></polyline>
+          </svg>
+          {{ successMessage }}
+        </div>
+
+        <!-- Error Message -->
+        <div *ngIf="error" class="error-message">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="12" cy="12" r="10"></circle>
+            <line x1="15" y1="9" x2="9" y2="15"></line>
+            <line x1="9" y1="9" x2="15" y2="15"></line>
+          </svg>
+          {{ error }}
+        </div>
+
         <div class="automation-info">
           <div class="automation-meta">
             <span class="automation-type">{{ getAutomationTypeDisplay(getSelectedAutomationType()) }}</span>
@@ -172,7 +191,20 @@
         </div>
 
         <div class="automation-content">
-          <h3>Generated Content</h3>
+          <!-- Automation Description and Example -->
+          <div class="automation-details" *ngIf="selectedAutomation?.automation">
+            <div class="automation-description" *ngIf="selectedAutomation?.automation?.description">
+              <h4>Description</h4>
+              <p>{{ selectedAutomation?.automation?.description }}</p>
+            </div>
+            <div class="automation-example" *ngIf="selectedAutomation?.automation?.example">
+              <h4>Example</h4>
+              <p>{{ selectedAutomation?.automation?.example }}</p>
+            </div>
+          </div>
+
+          <!-- Generated Content Title -->
+          <h3 *ngIf="selectedAutomation?.title">{{ selectedAutomation?.title }}</h3>
           <div class="content-text">
             {{ selectedAutomation?.text }}
           </div>
@@ -197,9 +229,9 @@
             <span *ngIf="!loading">Regenerate</span>
           </button>
 
-          <button 
-            class="action-btn post-btn" 
-            (click)="postToLinkedIn()" 
+          <button
+            class="action-btn post-btn"
+            (click)="postToLinkedIn()"
             [disabled]="loading || !isLinkedInAutomation()"
             [class.disabled]="!isLinkedInAutomation()"
           >

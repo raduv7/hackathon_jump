@@ -16,10 +16,10 @@ public class EventReportAutomation {
     @Id
     @GeneratedValue
     private Long id;
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "event_report_id", referencedColumnName = "id")
     private EventReport eventReport;
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "automation_id", referencedColumnName = "id")
     private Automation automation;
     private String title;

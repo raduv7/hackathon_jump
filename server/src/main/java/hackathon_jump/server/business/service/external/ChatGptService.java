@@ -118,7 +118,7 @@ public class ChatGptService {
         prompt.append(automation.getAutomationType().toString().toLowerCase().replace("_", " "));
         prompt.append(" for ");
         prompt.append(automation.getMediaPlatform().toString().toLowerCase());
-        prompt.append(":\n\n");
+        prompt.append("(just tell me the content, nothing else):\n\n");
         
         prompt.append("Automation Details:\n");
         prompt.append("- Title: ").append(automation.getTitle()).append("\n");
@@ -141,7 +141,7 @@ public class ChatGptService {
     }
 
     private String buildTitlePrompt(EventReport eventReport, Automation automation) {
-        return String.format("Find a good title for %s with this text:\n\n%s", 
+        return String.format("Give me a good title(just a title, nothing else) for %s with this text:\n\n%s",
             automation.getMediaPlatform().toString().toLowerCase(), 
             eventReport.getTranscript());
     }
@@ -156,9 +156,8 @@ public class ChatGptService {
         headers.setContentType(MediaType.APPLICATION_JSON);
         
         Map<String, Object> requestBody = new HashMap<>();
-        requestBody.put("model", "gpt-5-nano");
-        requestBody.put("max_completion_tokens", 1000);
-        requestBody.put("temperature", 0.7);
+        requestBody.put("model", "gpt-5-mini");
+        requestBody.put("max_completion_tokens", 11024);
         
         Map<String, Object> message = new HashMap<>();
         message.put("role", "user");

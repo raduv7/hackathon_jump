@@ -39,6 +39,7 @@ interface EventDetail {
 
 interface Automation {
   id: number;
+  title: string;
   automationType: string;
   mediaPlatform: string;
   description: string;
@@ -67,6 +68,7 @@ export class EventDetailComponent implements OnInit {
   showAutomationPopup: boolean = false;
   loading: boolean = false;
   error: string = '';
+  successMessage: string = '';
 
 
   constructor(
@@ -116,6 +118,7 @@ export class EventDetailComponent implements OnInit {
     const headers = this.getAuthHeaders();
     this.http.get<Automation[]>(`${API_BASE_URL}/automations`, { headers }).subscribe({
       next: (automations) => {
+        console.log("automations: ", automations);
         this.automations = automations;
       },
       error: (error) => {
@@ -164,6 +167,8 @@ export class EventDetailComponent implements OnInit {
   closeAutomationPopup() {
     this.showAutomationPopup = false;
     this.selectedAutomation = null;
+    this.error = '';
+    this.successMessage = '';
   }
 
   copyText() {
@@ -297,24 +302,34 @@ export class EventDetailComponent implements OnInit {
   postToLinkedIn(): void {
     const linkedinUsername = localStorage.getItem('linkedinUsername');
 
-    if (!linkedinUsername || linkedinUsername.trim() === '' || !this.eventDetail?.postText) {
+    if (!linkedinUsername || linkedinUsername.trim() === '' || !this.selectedAutomation?.id) {
       return;
     }
 
-    const postText = this.eventDetail.postText;
+    this.loading = true;
+    this.error = '';
+    this.successMessage = '';
+    const headers = this.getAuthHeaders();
 
-    // Create LinkedIn post URL with pre-filled text
-    const linkedinUrl = `https://www.linkedin.com/in/${linkedinUsername}/recent-activity/all/`;
-
-    // Open LinkedIn in a new tab
-    window.open(linkedinUrl, '_blank');
-
-    // Copy the post text to clipboard for easy pasting
-    navigator.clipboard.writeText(postText).then(() => {
-      console.log('Post text copied to clipboard for LinkedIn posting');
-      // You could add a toast notification here
-    }).catch(err => {
-      console.error('Failed to copy post text for LinkedIn: ', err);
+    this.http.post<{message: string, title: string, textLength: string}>(
+      `${API_BASE_URL}/event-report-automations/${this.selectedAutomation.id}/linkedin`,
+      {},
+      { headers }
+    ).subscribe({
+      next: (response) => {
+        console.log('Posted to LinkedIn:', response);
+        this.loading = false;
+        this.successMessage = `Successfully posted "${response.title}" to LinkedIn!`;
+        // Clear success message after 5 seconds
+        setTimeout(() => {
+          this.successMessage = '';
+        }, 5000);
+      },
+      error: (error) => {
+        console.error('Error posting to LinkedIn:', error);
+        this.error = 'Failed to post to LinkedIn';
+        this.loading = false;
+      }
     });
   }
 
