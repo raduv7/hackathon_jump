@@ -71,8 +71,11 @@ export class EventsService {
 
   getUpcomingEvents(): Event[] {
     const events = this.eventsSubject.value;
+    const nowUtcMs = Date.now(); // UTC timestamp
 
-    return events.sort((a, b) => new Date(a.startDateTime).getTime() - new Date(b.startDateTime).getTime());
+    return events
+      .filter(event => new Date(event.startDateTime + "Z").getTime() >= nowUtcMs)
+      .sort((a, b) => new Date(a.startDateTime).getTime() - new Date(b.startDateTime).getTime());
   }
 
   getCurrentUTCTime(): string {
