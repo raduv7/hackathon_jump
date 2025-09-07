@@ -76,8 +76,6 @@ export class EventsService {
   }
 
   getCurrentUTCTime(): string {
-    const now = new Date();
-    const utcNow = new Date(now.getTime() + (now.getTimezoneOffset() * 60000));
-    return utcNow.toISOString();
+    return new Date().toISOString();
   }
 }
