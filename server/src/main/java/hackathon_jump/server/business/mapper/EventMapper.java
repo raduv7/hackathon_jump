@@ -18,7 +18,7 @@ import java.util.stream.Collectors;
 @Mapper(componentModel = "spring")
 public interface EventMapper {
     Pattern MEET_PATTERN = Pattern.compile("(?:https?://)?meet\\.google\\.com/[a-z\\-]+");
-    Pattern ZOOM_PATTERN = Pattern.compile("(?:https?://)?(?:[a-z0-9]+\\.)?zoom\\.us/j/\\d+");
+    Pattern ZOOM_PATTERN = Pattern.compile("(?:https?://)?(?:[a-z0-9]+\\.)?zoom\\.us/j/\\d+(?:\\?pwd=[^\\s]+)?");
     Pattern TEAMS_PATTERN = Pattern.compile("(?:https?://)?teams\\.microsoft\\.com/l/meetup-join/[^ \t\n]+");
 
     @Mapping(target = "id", ignore = true)

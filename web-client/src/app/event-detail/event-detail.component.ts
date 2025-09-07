@@ -210,6 +210,11 @@ export class EventDetailComponent implements OnInit {
     return this.selectedAutomation?.automation.mediaPlatform === 'LINKEDIN';
   }
 
+  hasLinkedInUsername(): boolean {
+    const linkedinUsername = localStorage.getItem('linkedinUsername');
+    return linkedinUsername !== null && linkedinUsername.trim() !== '';
+  }
+
   goBack() {
     this.router.navigate(['/past-events']);
   }
