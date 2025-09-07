@@ -123,14 +123,27 @@ public class RecallAiService {
                 }
             }
             
-            // Fill attendees from bot (if available in bot details)
-            if (botDetails.containsKey("attendees")) {
-                Object attendeesObj = botDetails.get("attendees");
-                if (attendeesObj instanceof java.util.List) {
+            // Fill attendees from meeting_participants (if available in bot details)
+            if (botDetails.containsKey("meeting_participants")) {
+                Object participantsObj = botDetails.get("meeting_participants");
+                if (participantsObj instanceof java.util.List) {
                     @SuppressWarnings("unchecked")
-                    java.util.List<String> attendees = (java.util.List<String>) attendeesObj;
-                    eventReport.setAttendees(String.join(", ", attendees));
-                    log.debug("Set attendees from bot: {}", eventReport.getAttendees());
+                    java.util.List<Map<String, Object>> participants = (java.util.List<Map<String, Object>>) participantsObj;
+                    
+                    java.util.List<String> attendeeNames = new java.util.ArrayList<>();
+                    for (Map<String, Object> participant : participants) {
+                        if (participant.containsKey("name")) {
+                            String name = (String) participant.get("name");
+                            if (name != null && !name.trim().isEmpty()) {
+                                attendeeNames.add(name);
+                            }
+                        }
+                    }
+                    
+                    if (!attendeeNames.isEmpty()) {
+                        eventReport.setAttendees(String.join(", ", attendeeNames));
+                        log.debug("Set attendees from meeting_participants: {}", eventReport.getAttendees());
+                    }
                 }
             }
             
