@@ -176,8 +176,16 @@ public class AuthController {
     public ResponseEntity<String> handleMergeTokens(@RequestAttribute("session") Session session,
                                             @RequestBody String token2) {
         Session session2 = jwtService.validateAndGetSession(token2);
+        if(session2.getGoogleEmailAddresses() != null && !session2.getGoogleEmailAddresses().isEmpty()) {
+            this.userService.syncUsers(session.getGoogleEmailAddresses().getFirst(), session2.getGoogleEmailAddresses().getFirst());
+        }
         Session newSession = jwtService.mergeSessions(session, session2);
         String jwt = jwtService.issue(newSession);
         return ResponseEntity.ok(jwt);
+    }
+
+    @GetMapping("/ping")
+    public ResponseEntity<String> ping() {
+        return ResponseEntity.ok("pinged");
     }
 }

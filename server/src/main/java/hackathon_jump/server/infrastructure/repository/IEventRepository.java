@@ -12,7 +12,7 @@ import java.util.Optional;
 @Repository
 public interface IEventRepository extends JpaRepository<Event, Long> {
     List<Event> findAllByOwner(User owner);
-    List<Event> findAllByOwnerAndFinishedIsFalseAndStartDateTimeAfter(User owner, LocalDateTime dateTime);
+    List<Event> findAllByOwnerAndFinishedIsFalseAndEventReportIsNotNullAndStartDateTimeBefore(User owner, LocalDateTime dateTime);
 
     Optional<Event> findOneByGoogleId(String googleId);
 }

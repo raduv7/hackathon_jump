@@ -15,10 +15,7 @@ import org.springframework.stereotype.Service;
 
 import java.io.IOException;
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Objects;
-import java.util.Optional;
+import java.util.*;
 
 @Service
 @Slf4j
@@ -36,7 +33,10 @@ public class EventService {
 
     public List<Event> getAll(Session session) throws IOException {
         List<Event> events = getAllFromGoogle(session);
-        return saveAll(events);
+        return saveAll(events)
+                .stream()
+                .sorted(Comparator.comparingInt(event -> event.getStartDateTime().getSecond()))
+                .toList();
     }
 
     public List<Event> getAllOngoing(Session session) {
@@ -44,10 +44,12 @@ public class EventService {
 
         for(String googleEmailAddress : session.getGoogleEmailAddresses()) {
             User user = userRepository.findByUsernameAndProvider(googleEmailAddress, EOauthProvider.GOOGLE).orElseThrow();
-            events.addAll(this.eventRepository.findAllByOwnerAndFinishedIsFalseAndStartDateTimeAfter(user, LocalDateTime.now()));
+            events.addAll(this.eventRepository.findAllByOwnerAndFinishedIsFalseAndEventReportIsNotNullAndStartDateTimeBefore(user, LocalDateTime.now()));
         }
 
-        return events;
+        return events.stream()
+                .sorted(Comparator.comparingInt(event -> - event.getStartDateTime().getSecond()))   // reversed
+                .toList();
     }
 
     public void refreshAll(Session session) throws IOException {

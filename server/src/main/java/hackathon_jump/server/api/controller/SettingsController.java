@@ -17,7 +17,17 @@ public class SettingsController {
     @Autowired
     private UserService userService;
 
-    @PutMapping("/minutes_before_meeting/{minutesBeforeMeeting}")
+    @GetMapping("/minutes_before_meeting")
+    public ResponseEntity<Integer> getMinutesBeforeMeeting(@RequestAttribute("session") Session session) {
+        try {
+            return ResponseEntity.ok(userService.getMinutesBeforeMeeting(session));
+        }
+        catch (Exception e) {
+            return new ResponseEntity<>(HttpStatusCode.valueOf(405));
+        }
+    }
+
+    @PostMapping("/minutes_before_meeting/{minutesBeforeMeeting}")
     public ResponseEntity<String> handleUpdate(@RequestAttribute("session") Session session,
                                                     @PathVariable("minutesBeforeMeeting") Integer minutesBeforeMeeting) {
         try {

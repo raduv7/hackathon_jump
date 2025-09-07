@@ -12,20 +12,11 @@
         </div>
       </div>
 
-      <!-- Calendar Card -->
-      <div class="dashboard-card calendar-card">
-        <h3>Calendar Integration</h3>
-        <p>Your Google Calendar is connected and ready to use.</p>
-        <button class="action-btn primary" (click)="loadCalendarEvents()">
-          Load Calendar Events
-        </button>
-      </div>
-
-      <!-- Events Card -->
-      <div class="dashboard-card events-card">
-        <h3>Recent Events</h3>
-        <div class="events-list" *ngIf="events.length > 0; else noEvents">
-          <div class="event-item" *ngFor="let event of events">
+      <!-- Current Events Card -->
+      <div class="dashboard-card current-events-card">
+        <h3>Current Events</h3>
+        <div class="events-list" *ngIf="ongoingEvents.length > 0; else noOngoingEvents">
+          <div class="event-item" *ngFor="let event of ongoingEvents">
             <div class="event-time">{{ formatEventTime(event.startDateTime) }}</div>
             <div class="event-title">{{ event.title }}</div>
             <div class="event-creator">by {{ event.creator }}</div>
@@ -36,25 +27,11 @@
             </div>
           </div>
         </div>
-        <ng-template #noEvents>
-          <p class="no-events">No events found. Click "Load Calendar Events" to fetch your calendar data.</p>
+        <ng-template #noOngoingEvents>
+          <p class="no-events">No ongoing events found.</p>
         </ng-template>
       </div>
 
-      <!-- Settings Card -->
-      <div class="dashboard-card settings-card">
-        <h3>Settings</h3>
-        <div class="settings-list">
-          <div class="setting-item">
-            <label>Auto-refresh calendar</label>
-            <input type="checkbox" [(ngModel)]="autoRefresh" (change)="toggleAutoRefresh()">
-          </div>
-          <div class="setting-item">
-            <label>Notifications</label>
-            <input type="checkbox" [(ngModel)]="notifications" (change)="toggleNotifications()">
-          </div>
-        </div>
-      </div>
     </div>
   </main>
 

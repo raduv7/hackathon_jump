@@ -2,6 +2,7 @@ import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import {ActivatedRoute, Params, Router} from '@angular/router';
 import { HttpClient } from '@angular/common/http';
+import { API_BASE_URL } from '../../security.config';
 
 @Component({
   selector: 'app-callback',
@@ -125,7 +126,7 @@ export class CallbackComponent implements OnInit {
       'Content-Type': 'application/json'
     };
 
-    this.http.post('http://localhost:8080/auth/tokens', token2, { 
+    this.http.post(`${API_BASE_URL}/auth/tokens`, token2, { 
       headers,
       responseType: 'text'
     })

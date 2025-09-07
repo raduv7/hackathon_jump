@@ -36,6 +36,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
   userProvider: string = '';
   
   events: Event[] = [];
+  ongoingEvents: Event[] = [];
   autoRefresh: boolean = false;
   notifications: boolean = true;
   
@@ -51,6 +52,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
   ngOnInit() {
     this.loadUserInfo();
     this.subscribeToEvents();
+    this.loadOngoingEvents();
   }
 
   ngOnDestroy() {
@@ -79,6 +81,20 @@ export class DashboardComponent implements OnInit, OnDestroy {
     return new HttpHeaders({
       'Authorization': `Bearer ${token}`,
       'Content-Type': 'application/json'
+    });
+  }
+
+  loadOngoingEvents() {
+    const headers = this.getAuthHeaders();
+    this.http.get<Event[]>(`${API_BASE_URL}/events/ongoing_events`, { headers }).subscribe({
+      next: (events) => {
+        console.log('Ongoing events loaded:', events);
+        this.ongoingEvents = events;
+      },
+      error: (error) => {
+        console.error('Error loading ongoing events:', error);
+        this.ongoingEvents = [];
+      }
     });
   }
 

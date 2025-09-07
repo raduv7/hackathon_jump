@@ -121,7 +121,7 @@
 
 .dashboard-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  grid-template-columns: 1fr 1fr 1fr;
   gap: 2rem;
 }
 
@@ -169,6 +169,11 @@
   h2, p {
     color: white;
   }
+}
+
+.current-events-card {
+  grid-column: 3;
+  grid-row: 1;
 }
 
 .status-indicator {
@@ -367,6 +372,11 @@
 
   .welcome-card {
     grid-column: span 1;
+  }
+
+  .current-events-card {
+    grid-column: 1;
+    grid-row: auto;
   }
 }
 

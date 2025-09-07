@@ -1,5 +1,6 @@
 package hackathon_jump.server.model.domain;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import hackathon_jump.server.model.enums.EMeetingPlatform;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
@@ -26,8 +27,7 @@ public class EventReport {
     private EMeetingPlatform platform;
     private String transcript;
     private String emailText;
-    private String linkedinPost;
-    private String facebookPost;
+    private String postText;
     @OneToOne(fetch = FetchType.EAGER, mappedBy = "eventReport")
     private Event event;
 }

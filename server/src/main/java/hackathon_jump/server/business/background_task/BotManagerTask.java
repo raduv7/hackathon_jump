@@ -1,5 +1,6 @@
 package hackathon_jump.server.business.background_task;
 
+import hackathon_jump.server.business.service.external.ChatGptService;
 import hackathon_jump.server.business.service.external.RecallAiService;
 import hackathon_jump.server.infrastructure.repository.IEventReportRepository;
 import hackathon_jump.server.infrastructure.repository.IEventRepository;
@@ -23,6 +24,8 @@ public class BotManagerTask {
     private IEventRepository eventRepository;
     @Autowired
     private RecallAiService recallAiService;
+    @Autowired
+    private ChatGptService chatGptService;
 
     @Scheduled(fixedRate = 60000)
     public void execute() {
@@ -48,6 +51,10 @@ public class BotManagerTask {
 
         eventReport.setPlatform(EMeetingPlatform.fromLink(event.getLink()));
         this.recallAiService.fillEventReport(eventReport);
+
+        eventReport.setEmailText(this.chatGptService.generateEmailSummary(eventReport));
+        eventReport.setPostText(this.chatGptService.generatePostSummary(eventReport));
+
         this.eventReportRepository.save(eventReport);
     }
 }

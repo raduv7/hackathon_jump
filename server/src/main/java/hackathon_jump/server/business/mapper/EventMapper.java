@@ -17,9 +17,9 @@ import java.util.stream.Collectors;
 
 @Mapper(componentModel = "spring")
 public interface EventMapper {
-    static final Pattern MEET_PATTERN = Pattern.compile("https://meet\\.google\\.com/[a-z\\-]+");
-    static final Pattern ZOOM_PATTERN = Pattern.compile("https://(?:[a-z0-9]+\\.)?zoom\\.us/j/\\d+");
-    static final Pattern TEAMS_PATTERN = Pattern.compile("https://teams\\.microsoft\\.com/l/meetup-join/[^ \t\n]+");
+    Pattern MEET_PATTERN = Pattern.compile("(?:https?://)?meet\\.google\\.com/[a-z\\-]+");
+    Pattern ZOOM_PATTERN = Pattern.compile("(?:https?://)?(?:[a-z0-9]+\\.)?zoom\\.us/j/\\d+");
+    Pattern TEAMS_PATTERN = Pattern.compile("(?:https?://)?teams\\.microsoft\\.com/l/meetup-join/[^ \t\n]+");
 
     @Mapping(target = "id", ignore = true)
     @Mapping(source = "id", target = "googleId")
@@ -30,9 +30,10 @@ public interface EventMapper {
     @Mapping(source = "start", target = "startDateTime", qualifiedByName = "dateTimeToLocalDateTime")
     @Mapping(source = "attendees", target = "attendees", qualifiedByName = "attendeesToStringList")
     @Mapping(source = "creator.email", target = "creator")
-    @Mapping(target = "owner", ignore = true)
     @Mapping(target = "shouldSendBot", constant = "false")
-    @Mapping(target = "isFinished", constant = "false")
+    @Mapping(target = "finished", constant = "false")
+    @Mapping(target = "owner", ignore = true)
+    @Mapping(target = "eventReport", ignore = true)
     Event googleEventToEvent(com.google.api.services.calendar.model.Event googleEvent);
 
     List<Event> googleEventsToEvents(List<com.google.api.services.calendar.model.Event> googleEvents);

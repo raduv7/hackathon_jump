@@ -1,5 +1,6 @@
 package hackathon_jump.server.model.domain;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import hackathon_jump.server.model.converter.StringListConverter;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
@@ -27,6 +28,7 @@ public class Event {
     private String googleId;
     @OneToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "event_report_id", referencedColumnName = "id")
+    @JsonIgnore
     private EventReport eventReport;
     private String title;
     private String description;
@@ -37,7 +39,7 @@ public class Event {
     private String location;
     private String link;
     private boolean shouldSendBot;
-    private boolean isFinished;
+    private boolean finished;
 
     public boolean canChangeBot() {
         return startDateTime.minusMinutes(owner.getMinutesBeforeMeeting()).isAfter(LocalDateTime.now());

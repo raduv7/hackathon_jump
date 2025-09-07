@@ -36,6 +36,7 @@ export class SettingsComponent implements OnInit {
   ngOnInit() {
     this.loadUserInfo();
     this.loadAccountData();
+    this.loadMinutesBeforeMeeting();
   }
 
   private loadUserInfo() {
@@ -168,6 +169,22 @@ export class SettingsComponent implements OnInit {
   }
 
   // Meeting settings methods
+  private loadMinutesBeforeMeeting() {
+    const headers = this.getAuthHeaders();
+    
+    this.http.get<number>(`${API_BASE_URL}/settings/minutes_before_meeting`, { headers })
+      .subscribe({
+        next: (minutes) => {
+          this.minutesBeforeMeeting = minutes;
+          console.log('Loaded minutes before meeting:', minutes);
+        },
+        error: (error) => {
+          console.error('Error loading minutes before meeting:', error);
+          // Keep the default value of 5 if loading fails
+        }
+      });
+  }
+
   saveMeetingSettings() {
     if (this.minutesBeforeMeeting < 1 || this.minutesBeforeMeeting > 60) {
       alert('Please enter a value between 1 and 60 minutes.');
@@ -185,7 +202,8 @@ export class SettingsComponent implements OnInit {
         next: (response) => {
           console.log('Meeting settings saved successfully:', response);
           this.isSaving = false;
-          // You could add a success message here
+          // Reload the value from server to ensure consistency
+          this.loadMinutesBeforeMeeting();
           alert('Settings saved successfully!');
         },
         error: (error) => {
