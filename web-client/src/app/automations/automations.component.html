@@ -1,0 +1,145 @@
+<div class="automations-container">
+
+  <main class="automations-main">
+    <!-- Page Header -->
+    <div class="page-header">
+      <h1>Automations</h1>
+      <p>Manage your automation templates for social media posts</p>
+      <button class="create-btn" (click)="openCreateModal()">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <line x1="12" y1="5" x2="12" y2="19"></line>
+          <line x1="5" y1="12" x2="19" y2="12"></line>
+        </svg>
+        Create Automation
+      </button>
+    </div>
+
+    <!-- Automations List -->
+    <div class="automations-section">
+      <div class="automations-list" *ngIf="automations.length > 0; else noAutomations">
+        <div class="automation-item" *ngFor="let automation of automations">
+          <div class="automation-header">
+            <div class="automation-info">
+              <h3 class="automation-title">{{ automation.title }}</h3>
+              <p class="automation-description">{{ automation.description }}</p>
+              <div class="automation-meta">
+                <span class="automation-type">{{ getAutomationTypeDisplay(automation.automationType) }}</span>
+                <span class="automation-platform">{{ getPlatformDisplay(automation.mediaPlatform) }}</span>
+              </div>
+            </div>
+            <div class="automation-actions">
+              <button class="action-btn edit-btn" (click)="openEditModal(automation)" title="Edit">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
+                  <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
+                </svg>
+              </button>
+              <button class="action-btn delete-btn" (click)="deleteAutomation(automation.id)" title="Delete">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <polyline points="3,6 5,6 21,6"></polyline>
+                  <path d="M19,6v14a2,2 0 0,1 -2,2H7a2,2 0 0,1 -2,-2V6m3,0V4a2,2 0 0,1 2,-2h4a2,2 0 0,1 2,2v2"></path>
+                </svg>
+              </button>
+            </div>
+          </div>
+          
+          <div class="automation-details" *ngIf="automation.example">
+            <div class="example-section">
+              <h4>Example:</h4>
+              <p class="example-text">{{ automation.example }}</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <ng-template #noAutomations>
+        <div class="no-automations">
+          <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1">
+            <circle cx="12" cy="12" r="10"></circle>
+            <path d="M12 6v6l4 2"></path>
+          </svg>
+          <h3>No automations yet</h3>
+          <p>Create your first automation template to get started with automated social media posts.</p>
+          <button class="create-btn" (click)="openCreateModal()">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <line x1="12" y1="5" x2="12" y2="19"></line>
+              <line x1="5" y1="12" x2="19" y2="12"></line>
+            </svg>
+            Create Your First Automation
+          </button>
+        </div>
+      </ng-template>
+    </div>
+
+  </main>
+
+  <!-- Create/Edit Modal -->
+  <div class="modal-overlay" *ngIf="showModal" (click)="closeModal()">
+    <div class="modal-dialog" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <h3>{{ isEditing ? 'Edit Automation' : 'Create Automation' }}</h3>
+        <button class="close-btn" (click)="closeModal()">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <line x1="18" y1="6" x2="6" y2="18"></line>
+            <line x1="6" y1="6" x2="18" y2="18"></line>
+          </svg>
+        </button>
+      </div>
+
+      <div class="modal-body">
+        <form (ngSubmit)="saveAutomation()" #automationForm="ngForm">
+          <div class="form-group">
+            <label for="title">Title</label>
+            <input type="text" id="title" name="title" 
+                   [(ngModel)]="currentAutomation.title" 
+                   placeholder="Enter automation title..." required>
+          </div>
+
+          <div class="form-group">
+            <label for="automationType">Automation Type</label>
+            <select id="automationType" name="automationType" [(ngModel)]="currentAutomation.automationType" required>
+              <option value="">Select type...</option>
+              <option value="POST">Post</option>
+              <option value="MARKETING_CONTENT">Marketing Content</option>
+              <option value="RECRUITING_CONTENT">Recruiting Content</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label for="mediaPlatform">Media Platform</label>
+            <select id="mediaPlatform" name="mediaPlatform" [(ngModel)]="currentAutomation.mediaPlatform" required>
+              <option value="">Select platform...</option>
+              <option value="EMAIL">Email</option>
+              <option value="FACEBOOK">Facebook</option>
+              <option value="LINKEDIN">LinkedIn</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label for="description">Description</label>
+            <input type="text" id="description" name="description" 
+                   [(ngModel)]="currentAutomation.description" 
+                   placeholder="Enter automation description..." required>
+          </div>
+
+          <div class="form-group">
+            <label for="example">Example (Optional)</label>
+            <textarea id="example" name="example" 
+                      [(ngModel)]="currentAutomation.example" 
+                      placeholder="Enter an example of the automation output..."
+                      rows="4"></textarea>
+          </div>
+
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" (click)="closeModal()">Cancel</button>
+            <button type="submit" class="btn btn-primary" [disabled]="!automationForm.form.valid || loading">
+              <span *ngIf="loading">Saving...</span>
+              <span *ngIf="!loading">{{ isEditing ? 'Update' : 'Create' }}</span>
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+</div>

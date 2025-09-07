@@ -6,19 +6,35 @@ import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { API_BASE_URL } from '../security.config';
 
 interface EventDetail {
-  title: string;
-  startDateTime: string;
-  endDateTime: string;
-  description: string;
-  location: string;
-  link: string;
-  creator: string;
+  // EventReport fields
+  id: number;
+  botId: string;
   attendees: string;
+  startDateTime: string;
   platform: string;
   transcript: string;
   emailText: string;
   postText: string;
-  sentBot: boolean;
+
+  // Event fields (nested)
+  event: {
+    id: number;
+    googleId: string;
+    title: string;
+    description: string;
+    creator: string;
+    attendees: string[];
+    startDateTime: string;
+    location: string;
+    link: string;
+    shouldSendBot: boolean;
+    finished: boolean;
+    owner: {
+      id: number;
+      username: string;
+      minutesBeforeMeeting: number;
+    };
+  };
 }
 
 interface Automation {
@@ -84,6 +100,7 @@ export class EventDetailComponent implements OnInit {
     const headers = this.getAuthHeaders();
     this.http.get<EventDetail>(`${API_BASE_URL}/event_reports/${this.eventId}`, { headers }).subscribe({
       next: (event) => {
+        console.log("event received:", event);
         this.eventDetail = event;
         this.loading = false;
       },
@@ -183,29 +200,6 @@ export class EventDetailComponent implements OnInit {
     });
   }
 
-  postToLinkedIn() {
-    if (!this.selectedAutomation) return;
-
-    this.loading = true;
-    const headers = this.getAuthHeaders();
-
-    this.http.post<{message: string, title: string, textLength: string}>(
-      `${API_BASE_URL}/event-report-automations/${this.selectedAutomation.id}/linkedin`,
-      {},
-      { headers }
-    ).subscribe({
-      next: (response) => {
-        console.log('Posted to LinkedIn:', response);
-        this.loading = false;
-        // You could add a success notification here
-      },
-      error: (error) => {
-        console.error('Error posting to LinkedIn:', error);
-        this.error = 'Failed to post to LinkedIn';
-        this.loading = false;
-      }
-    });
-  }
 
   isLinkedInAutomation(): boolean {
     return this.selectedAutomation?.automation.mediaPlatform === 'LINKEDIN';
@@ -249,9 +243,9 @@ export class EventDetailComponent implements OnInit {
   // Get platform logo based on platform name
   getPlatformLogo(platform: string): string | null {
     if (!platform) return null;
-    
+
     const platformLower = platform.toLowerCase();
-    
+
     if (platformLower.includes('google') || platformLower.includes('meet')) {
       return 'assets/img/googleMeet.png';
     } else if (platformLower.includes('zoom')) {
@@ -259,7 +253,70 @@ export class EventDetailComponent implements OnInit {
     } else if (platformLower.includes('teams') || platformLower.includes('microsoft')) {
       return 'assets/img/teams.png';
     }
-    
+
     return null;
   }
+
+  formatTranscriptAsJson(transcript: string): string {
+    if (!transcript) return '';
+
+    try {
+      // Try to parse as JSON first
+      const parsed = JSON.parse(transcript);
+      return JSON.stringify(parsed, null, 2);
+    } catch (error) {
+      // If not valid JSON, wrap it in a JSON structure
+      return JSON.stringify({
+        transcript: transcript
+      }, null, 2);
+    }
+  }
+
+  copyEmailText(): void {
+    if (this.eventDetail?.emailText) {
+      navigator.clipboard.writeText(this.eventDetail.emailText).then(() => {
+        console.log('Email text copied to clipboard');
+        // You could add a toast notification here
+      }).catch(err => {
+        console.error('Failed to copy email text: ', err);
+      });
+    }
+  }
+
+  copyPostText(): void {
+    if (this.eventDetail?.postText) {
+      navigator.clipboard.writeText(this.eventDetail.postText).then(() => {
+        console.log('Post text copied to clipboard');
+        // You could add a toast notification here
+      }).catch(err => {
+        console.error('Failed to copy post text: ', err);
+      });
+    }
+  }
+
+  postToLinkedIn(): void {
+    const linkedinUsername = localStorage.getItem('linkedinUsername');
+
+    if (!linkedinUsername || linkedinUsername.trim() === '' || !this.eventDetail?.postText) {
+      return;
+    }
+
+    const postText = this.eventDetail.postText;
+
+    // Create LinkedIn post URL with pre-filled text
+    const linkedinUrl = `https://www.linkedin.com/in/${linkedinUsername}/recent-activity/all/`;
+
+    // Open LinkedIn in a new tab
+    window.open(linkedinUrl, '_blank');
+
+    // Copy the post text to clipboard for easy pasting
+    navigator.clipboard.writeText(postText).then(() => {
+      console.log('Post text copied to clipboard for LinkedIn posting');
+      // You could add a toast notification here
+    }).catch(err => {
+      console.error('Failed to copy post text for LinkedIn: ', err);
+    });
+  }
+
+  protected readonly localStorage = localStorage;
 }
