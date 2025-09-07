@@ -307,6 +307,40 @@ export class EventDetailComponent implements OnInit {
   postToLinkedIn(): void {
     const linkedinUsername = localStorage.getItem('linkedinUsername');
 
+    if (!linkedinUsername || linkedinUsername.trim() === '' || !this.eventDetail?.id) {
+      return;
+    }
+
+    this.loading = true;
+    this.error = '';
+    this.successMessage = '';
+    const headers = this.getAuthHeaders();
+
+    this.http.post<{message: string, title: string, textLength: string}>(
+      `${API_BASE_URL}/event_reports/${this.eventDetail.id}/linkedin`,
+      {},
+      { headers }
+    ).subscribe({
+      next: (response) => {
+        console.log('Posted to LinkedIn:', response);
+        this.loading = false;
+        this.successMessage = `Successfully posted "${response.title}" to LinkedIn!`;
+        // Clear success message after 5 seconds
+        setTimeout(() => {
+          this.successMessage = '';
+        }, 5000);
+      },
+      error: (error) => {
+        console.error('Error posting to LinkedIn:', error);
+        this.error = 'Failed to post to LinkedIn';
+        this.loading = false;
+      }
+    });
+  }
+
+  postToLinkedInAutomation(): void {
+    const linkedinUsername = localStorage.getItem('linkedinUsername');
+
     if (!linkedinUsername || linkedinUsername.trim() === '' || !this.selectedAutomation?.id) {
       return;
     }
