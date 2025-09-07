@@ -43,7 +43,7 @@ export class EventsService {
 
   loadEvents(): Observable<Event[]> {
     const headers = this.getAuthHeaders();
-    
+
     return this.http.get<Event[]>(`${API_BASE_URL}/events`, { headers });
   }
 
@@ -53,7 +53,7 @@ export class EventsService {
 
   updateShouldSendBot(eventId: number, shouldSendBot: boolean): Observable<any> {
     const headers = this.getAuthHeaders();
-    
+
     return this.http.put(`${API_BASE_URL}/events/${eventId}/should_send_bot/${shouldSendBot}`, {}, { headers });
   }
 
@@ -61,7 +61,7 @@ export class EventsService {
     const events = this.eventsSubject.value;
     const targetDate = new Date(date);
     targetDate.setHours(0, 0, 0, 0);
-    
+
     return events.filter(event => {
       const eventDate = new Date(event.startDateTime);
       eventDate.setHours(0, 0, 0, 0);
@@ -71,11 +71,13 @@ export class EventsService {
 
   getUpcomingEvents(): Event[] {
     const events = this.eventsSubject.value;
+
+    return events.sort((a, b) => new Date(a.startDateTime).getTime() - new Date(b.startDateTime).getTime());
+  }
+
+  getCurrentUTCTime(): string {
     const now = new Date();
-    
-    return events.filter(event => {
-      const eventDate = new Date(event.startDateTime);
-      return eventDate >= now;
-    }).sort((a, b) => new Date(a.startDateTime).getTime() - new Date(b.startDateTime).getTime());
+    const utcNow = new Date(now.getTime() + (now.getTimezoneOffset() * 60000));
+    return utcNow.toISOString();
   }
 }

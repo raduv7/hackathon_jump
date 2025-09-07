@@ -104,23 +104,27 @@ export class FutureEventsComponent implements OnInit, OnDestroy {
   }
 
   goToToday() {
-    this.currentDate = new Date();
-    this.currentMonth = this.currentDate.getMonth();
-    this.currentYear = this.currentDate.getFullYear();
+    const today = new Date();
+    const utcToday = new Date(today.getTime() + (today.getTimezoneOffset() * 60000));
+    this.currentDate = utcToday;
+    this.currentMonth = utcToday.getMonth();
+    this.currentYear = utcToday.getFullYear();
     this.generateCalendar();
   }
 
   isToday(date: Date): boolean {
     const today = new Date();
-    return date.getDate() === today.getDate() &&
-           date.getMonth() === today.getMonth() &&
-           date.getFullYear() === today.getFullYear();
+    const utcToday = new Date(today.getTime() + (today.getTimezoneOffset() * 60000));
+    return date.getDate() === utcToday.getDate() &&
+           date.getMonth() === utcToday.getMonth() &&
+           date.getFullYear() === utcToday.getFullYear();
   }
 
   isFutureDate(date: Date): boolean {
     const today = new Date();
-    today.setHours(0, 0, 0, 0);
-    return date >= today;
+    const utcToday = new Date(today.getTime() + (today.getTimezoneOffset() * 60000));
+    utcToday.setHours(0, 0, 0, 0);
+    return date >= utcToday;
   }
 
   getMonthYearString(): string {
@@ -161,6 +165,11 @@ export class FutureEventsComponent implements OnInit, OnDestroy {
   // Check if event has empty link
   hasEmptyLink(event: Event): boolean {
     return !event.link || event.link.trim() === '';
+  }
+
+  // Get current UTC time for display
+  getCurrentUTCTime(): string {
+    return this.eventsService.getCurrentUTCTime();
   }
 
   // Placeholder method for future event functionality

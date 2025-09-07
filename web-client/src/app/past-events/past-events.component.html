@@ -63,6 +63,7 @@
     <div class="events-section">
       <div class="events-header">
         <h3>Past Events</h3>
+        <div class="utc-time">Current UTC Time: {{ getCurrentUTCTime() }}</div>
       </div>
 
       <div class="events-list" *ngIf="pastEvents.length > 0; else noEvents">
@@ -95,8 +96,8 @@
             </div>
             <!-- Show platform logo -->
             <div class="meeting-platform">
-              <img [src]="getPlatformLogo(eventReport.platform)" 
-                   [alt]="eventReport.platform" 
+              <img [src]="getPlatformLogo(eventReport.platform)"
+                   [alt]="eventReport.platform"
                    class="platform-logo"
                    *ngIf="getPlatformLogo(eventReport.platform)">
             </div>

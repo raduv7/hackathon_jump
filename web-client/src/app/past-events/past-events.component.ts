@@ -119,11 +119,7 @@ export class PastEventsComponent implements OnInit, OnDestroy {
   }
 
   getPastEventReports(): EventReport[] {
-    const now = new Date();
-    return this.eventReports.filter(eventReport => {
-      const eventDate = new Date(eventReport.startDateTime);
-      return eventDate < now;
-    }).sort((a, b) => new Date(b.startDateTime).getTime() - new Date(a.startDateTime).getTime());
+    return this.eventReports.sort((a, b) => new Date(b.startDateTime).getTime() - new Date(a.startDateTime).getTime());
   }
 
   generateCalendar() {
@@ -167,23 +163,27 @@ export class PastEventsComponent implements OnInit, OnDestroy {
   }
 
   goToToday() {
-    this.currentDate = new Date();
-    this.currentMonth = this.currentDate.getMonth();
-    this.currentYear = this.currentDate.getFullYear();
+    const today = new Date();
+    const utcToday = new Date(today.getTime() + (today.getTimezoneOffset() * 60000));
+    this.currentDate = utcToday;
+    this.currentMonth = utcToday.getMonth();
+    this.currentYear = utcToday.getFullYear();
     this.generateCalendar();
   }
 
   isToday(date: Date): boolean {
     const today = new Date();
-    return date.getDate() === today.getDate() &&
-           date.getMonth() === today.getMonth() &&
-           date.getFullYear() === today.getFullYear();
+    const utcToday = new Date(today.getTime() + (today.getTimezoneOffset() * 60000));
+    return date.getDate() === utcToday.getDate() &&
+           date.getMonth() === utcToday.getMonth() &&
+           date.getFullYear() === utcToday.getFullYear();
   }
 
   isFutureDate(date: Date): boolean {
     const today = new Date();
-    today.setHours(0, 0, 0, 0);
-    return date >= today;
+    const utcToday = new Date(today.getTime() + (today.getTimezoneOffset() * 60000));
+    utcToday.setHours(0, 0, 0, 0);
+    return date >= utcToday;
   }
 
   getMonthYearString(): string {
@@ -235,12 +235,17 @@ export class PastEventsComponent implements OnInit, OnDestroy {
     this.router.navigate(['/event-detail', eventReport.id]);
   }
 
+  // Get current UTC time for display
+  getCurrentUTCTime(): string {
+    return this.eventsService.getCurrentUTCTime();
+  }
+
   // Get platform logo based on platform name
   getPlatformLogo(platform: string): string | null {
     if (!platform) return null;
-    
+
     const platformLower = platform.toLowerCase();
-    
+
     if (platformLower.includes('google') || platformLower.includes('meet')) {
       return 'assets/img/googleMeet.png';
     } else if (platformLower.includes('zoom')) {
@@ -248,7 +253,7 @@ export class PastEventsComponent implements OnInit, OnDestroy {
     } else if (platformLower.includes('teams') || platformLower.includes('microsoft')) {
       return 'assets/img/teams.png';
     }
-    
+
     return null;
   }
 }

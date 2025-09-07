@@ -63,6 +63,7 @@
     <div class="events-section">
       <div class="events-header">
         <h3>Upcoming Events</h3>
+        <div class="utc-time">Current UTC Time: {{ getCurrentUTCTime() }}</div>
       </div>
 
       <div class="events-list" *ngIf="futureEvents.length > 0; else noEvents">
