@@ -1,0 +1,41 @@
+services:
+  - type: web
+    name: meetscribe-server
+    env: docker
+    dockerfilePath: ./Dockerfile.prod
+    dockerContext: .
+    plan: starter
+    region: oregon
+    branch: main
+    buildCommand: ""
+    startCommand: ""
+    healthCheckPath: /actuator/health
+    envVars:
+      - key: SPRING_PROFILES_ACTIVE
+        value: docker
+      - key: SPRING_DATASOURCE_URL
+        value: jdbc:sqlite:/app/data/meetScribe.sqlite
+      - key: APP_FRONTEND_URL
+        sync: false  # Set this in Render dashboard
+      - key: APP_CORS_ALLOWED_ORIGINS
+        sync: false  # Set this in Render dashboard
+      - key: APP_BASE_URL
+        sync: false  # Set this in Render dashboard
+      - key: GOOGLE_CLIENT_ID
+        sync: false  # Set this in Render dashboard
+      - key: GOOGLE_CLIENT_SECRET
+        sync: false  # Set this in Render dashboard
+      - key: LINKEDIN_CLIENT_ID
+        sync: false  # Set this in Render dashboard
+      - key: LINKEDIN_CLIENT_SECRET
+        sync: false  # Set this in Render dashboard
+      - key: FACEBOOK_CLIENT_ID
+        sync: false  # Set this in Render dashboard
+      - key: FACEBOOK_CLIENT_SECRET
+        sync: false  # Set this in Render dashboard
+      - key: JWT_SECRET
+        sync: false  # Set this in Render dashboard
+      - key: RECALL_API_KEY
+        sync: false  # Set this in Render dashboard
+      - key: OPENAI_API_KEY
+        sync: false  # Set this in Render dashboard

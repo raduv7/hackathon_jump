@@ -1,0 +1,54 @@
+# Build artifacts
+build/
+.gradle/
+gradle-app.setting
+!gradle-wrapper.jar
+
+# IDE files
+.idea/
+*.iml
+*.ipr
+*.iws
+.vscode/
+.settings/
+.project
+.classpath
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Logs
+logs/
+*.log
+
+# Temporary files
+tmp/
+temp/
+
+# Git
+.git/
+.gitignore
+
+# Documentation
+README.md
+HELP.md
+
+# Test files
+src/test/
+
+# Node modules (if any)
+node_modules/
+
+# Docker files
+Dockerfile
+.dockerignore
+docker-compose*.yml
+
+# Environment files
+.env
+.env.local
+.env.*.local
+
+# Secrets (should not be in container)
+secrets.properties

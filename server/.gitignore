@@ -38,6 +38,7 @@ out/
 
 # Sensitive configuration files
 src/main/resources/secrets.properties
+/src/main/resources/secrets-docker.properties
 src/main/resources/database
 
 # Logs directory
